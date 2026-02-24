@@ -1,0 +1,27 @@
+# ══════════════════════════════════════════════════════════════
+#  K.I.T.T. — Driver Recognition Service
+#  Auteur : ByManix (Emmanuel Gelinne)
+#  Licence : Elastic License 2.0 (ELv2)
+# ══════════════════════════════════════════════════════════════
+
+[Unit]
+Description=K.I.T.T. Driver Recognition System
+After=bluetooth.target
+Wants=bluetooth.target
+
+[Service]
+Type=simple
+User=kitt
+Group=kitt
+WorkingDirectory=/home/kitt/kitt-ai/driver
+ExecStart=/home/kitt/kitt-ai/driver/bluetooth_detect.sh
+Restart=on-failure
+RestartSec=10
+Environment=HOME=/home/kitt
+Environment=DISPLAY=:0
+Environment=LD_LIBRARY_PATH=/home/kitt/CTranslate2/install/lib
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

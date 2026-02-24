@@ -1,0 +1,38 @@
+[Unit]
+Description=KITT — Kyronex AI Server (LLM + STT + TTS + Web)
+Documentation=https://github.com/on3egs/Kitt-franco-belge
+After=network-online.target sound.target
+Wants=network-online.target
+# Le tunnel démarre après ce service
+Before=kitt-tunnel.service
+
+[Service]
+Type=simple
+User=kitt
+Group=kitt
+WorkingDirectory=/home/kitt/kitt-ai
+
+# Variables d'environnement
+Environment=HOME=/home/kitt
+Environment=HF_HUB_OFFLINE=1
+Environment=LD_LIBRARY_PATH=/home/kitt/CTranslate2/install/lib:/home/kitt/llama.cpp/build/bin:/home/kitt/llama.cpp/build/ggml/src
+
+# Lancement du script principal (gère llama + kyronex)
+ExecStart=/bin/bash /home/kitt/kitt-ai/start_kyronex.sh
+
+# Redémarrage automatique si crash (pas au stop normal)
+Restart=on-failure
+RestartSec=15
+StartLimitIntervalSec=120
+StartLimitBurst=3
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kitt-kyronex
+
+# Timeout plus long pour le chargement du LLM (~14s au boot)
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

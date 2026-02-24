@@ -1,0 +1,90 @@
+KYRONEX — Kinetic Yielding Responsive Onboard Neural EXpert
+Copyright (c) 2026 Manix
+
+Ce projet utilise les composants tiers suivants :
+
+================================================================================
+llama.cpp
+--------------------------------------------------------------------------------
+Licence : MIT
+URL     : https://github.com/ggerganov/llama.cpp
+Auteur  : Georgi Gerganov et contributeurs
+Usage   : Serveur d'inférence LLM (llama-server)
+
+================================================================================
+Qwen 2.5 3B Instruct
+--------------------------------------------------------------------------------
+Licence : Apache 2.0
+URL     : https://huggingface.co/Qwen/Qwen2.5-3B-Instruct
+Auteur  : Alibaba Cloud / Qwen Team
+Usage   : Modèle de langage (quantifié Q5_K_M GGUF)
+
+================================================================================
+faster-whisper
+--------------------------------------------------------------------------------
+Licence : MIT
+URL     : https://github.com/SYSTRAN/faster-whisper
+Auteur  : SYSTRAN
+Usage   : Reconnaissance vocale (Speech-to-Text)
+
+================================================================================
+Piper TTS
+--------------------------------------------------------------------------------
+Licence : MIT
+URL     : https://github.com/rhasspy/piper
+Auteur  : Michael Hansen / Rhasspy
+Usage   : Synthèse vocale (Text-to-Speech)
+Modèle  : fr_FR-tom-medium (Licence MIT)
+
+================================================================================
+aiohttp
+--------------------------------------------------------------------------------
+Licence : Apache 2.0
+URL     : https://github.com/aio-libs/aiohttp
+Usage   : Serveur web asynchrone et client HTTP
+
+================================================================================
+YOLOX
+--------------------------------------------------------------------------------
+Licence : Apache 2.0
+URL     : https://github.com/Megvii-BaseDetection/YOLOX
+Auteur  : Megvii Technology (旷视科技)
+Usage   : Détection d'objets (vision caméra, modèle YOLOX-S ONNX)
+
+================================================================================
+OpenCV (cv2)
+--------------------------------------------------------------------------------
+Licence : Apache 2.0
+URL     : https://github.com/opencv/opencv
+Usage   : Capture caméra et prétraitement d'images (via vision.py)
+
+================================================================================
+NumPy
+--------------------------------------------------------------------------------
+Licence : BSD 3-Clause
+URL     : https://github.com/numpy/numpy
+Usage   : Calculs numériques
+
+================================================================================
+SoX (Sound eXchange)
+--------------------------------------------------------------------------------
+Licence : GPL-2.0
+URL     : https://sourceforge.net/projects/sox/
+Usage   : Post-traitement audio (effets robotiques sur la voix)
+
+  NOTE : SoX est invoqué comme outil externe via subprocess.
+  Il n'est pas lié statiquement au code de KYRONEX.
+
+================================================================================
+FFmpeg
+--------------------------------------------------------------------------------
+Licence : LGPL-2.1 / GPL-2.0 (selon configuration)
+URL     : https://ffmpeg.org/
+Usage   : Conversion de formats audio (requis par faster-whisper)
+
+  NOTE : FFmpeg est invoqué comme outil externe via subprocess.
+  Il n'est pas lié statiquement au code de KYRONEX.
+
+================================================================================
+
+Pour toute question concernant les licences, contactez l'auteur du projet.

@@ -1,0 +1,42 @@
+# Environnement Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Certificats SSL (sensibles)
+certs/
+
+# Modèles IA (trop lourds pour GitHub)
+models/
+piper/
+
+# Données utilisateur (privées)
+memory.json
+users.json
+conn_stats.json
+logs/
+audio_cache/
+
+# Backups locaux
+BACKUP_*/
+*.tar.gz
+
+# Fichiers temporaires
+*.wav
+*.swp
+*.bak*
+site/
+
+# Versions sauvegardées (historique local, pas utile sur GitHub)
+static/versions/
+static/backups_night/
+
+# PID fichiers
+*.pid
+
+# Claude Code
+.claude/
+
+# PDFs générés (lourds)
+*.pdf

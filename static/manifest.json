@@ -1,0 +1,10 @@
+{
+  "name": "KYRONEX — Neural EXpert",
+  "short_name": "KYRONEX",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait",
+  "icons": []
+}

@@ -1,0 +1,42 @@
+[Unit]
+Description=KITT — Cloudflare Tunnel (accès distant + GitHub update)
+Documentation=https://github.com/on3egs/Kitt-franco-belge
+After=network-online.target kitt-kyronex.service
+Wants=network-online.target
+Requires=kitt-kyronex.service
+
+[Service]
+Type=simple
+User=kitt
+Group=kitt
+WorkingDirectory=/home/kitt/kitt-ai
+
+# Charger les variables du tunnel (GITHUB_TOKEN, GITHUB_REPO, etc.)
+EnvironmentFile=/home/kitt/.env.tunnel
+Environment=HOME=/home/kitt
+
+# Délai pour laisser kyronex démarrer complètement (port 3000 disponible)
+ExecStartPre=/bin/sleep 20
+
+# Lancement du tunnel
+ExecStart=/bin/bash /home/kitt/kitt-ai/start_tunnel.sh
+
+# Mise offline propre à l'arrêt
+ExecStopPost=/bin/bash -c 'source /home/kitt/.env.tunnel && cd /home/kitt/kitt-ai && venv/bin/python3 tunnel_updater.py --offline 2>/dev/null || true'
+
+# Redémarrage automatique
+Restart=on-failure
+RestartSec=30
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+# Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=kitt-tunnel
+
+TimeoutStartSec=90
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
