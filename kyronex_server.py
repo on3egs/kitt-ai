@@ -959,9 +959,13 @@ async def query_llm(user_message: str, history: list, user_name: str = "", user_
 
     payload = {
         "messages": messages,
-        "temperature": 0.35,
-        "max_tokens": 192,
-        "top_p": 0.9,
+        "temperature": 0.7,
+        "max_tokens": 256,
+        "top_p": 0.8,
+        "top_k": 20,
+        "min_p": 0.05,
+        "repeat_penalty": 1.1,
+        "repeat_last_n": 64,
         "stream": False,
     }
 
@@ -1343,8 +1347,9 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
         session = await get_llm_session()
         async with session.post(
             f"{LLAMA_SERVER}/v1/chat/completions",
-            json={"messages": messages, "temperature": 0.35, "max_tokens": 192,
-                  "top_p": 0.9, "stream": True},
+            json={"messages": messages, "temperature": 0.7, "max_tokens": 256,
+                  "top_p": 0.8, "top_k": 20, "min_p": 0.05,
+                  "repeat_penalty": 1.1, "repeat_last_n": 64, "stream": True},
         ) as llm_resp:
             async for line in llm_resp.content:
                 text = line.decode("utf-8").strip()
@@ -1596,8 +1601,9 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
         session = await get_llm_session()
         async with session.post(
             f"{LLAMA_SERVER}/v1/chat/completions",
-            json={"messages": messages, "temperature": 0.35, "max_tokens": 192,
-                  "top_p": 0.9, "stream": True},
+            json={"messages": messages, "temperature": 0.7, "max_tokens": 256,
+                  "top_p": 0.8, "top_k": 20, "min_p": 0.05,
+                  "repeat_penalty": 1.1, "repeat_last_n": 64, "stream": True},
         ) as llm_resp:
             async for line in llm_resp.content:
                 text = line.decode("utf-8").strip()
