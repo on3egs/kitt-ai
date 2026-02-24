@@ -399,7 +399,7 @@ body > * { position: relative; z-index: 1; }
   letter-spacing: 0.5px;
   transition: all 0.2s;
 }
-.input-area input::placeholder { color: #3a1a1a; }
+.input-area input::placeholder { color: #774444; }
 .input-area input:focus {
   border-color: #880000;
   border-bottom-color: #ff2200;
@@ -766,6 +766,41 @@ body > * { position: relative; z-index: 1; }
   letter-spacing: 1.5px;
   margin-bottom: 14px;
 }
+.mb-secret-toggle {
+  margin-top: 18px; font-size: 0.5em; color: #1a3a1a;
+  letter-spacing: 2px; cursor: pointer; transition: color 0.3s;
+  text-align: center; user-select: none;
+}
+.mb-secret-toggle:hover { color: #447744; }
+.mb-secret-box {
+  display: none; margin-top: 10px; padding-top: 12px;
+  border-top: 1px solid rgba(0,200,60,0.15);
+}
+.mb-secret-box input {
+  background: rgba(0,15,0,0.8);
+  border: none; border-bottom: 2px solid rgba(0,200,60,0.4);
+  color: #88ff88; font-family: inherit; font-size: 1em;
+  letter-spacing: 6px; padding: 8px 12px; text-align: center;
+  width: 100%; outline: none; margin-bottom: 8px; caret-color: #00ff66;
+  box-sizing: border-box;
+}
+.mb-secret-btn {
+  background: transparent; border: 1px solid rgba(0,200,60,0.25);
+  color: #336633; font-family: inherit; font-size: 0.5em;
+  letter-spacing: 2px; padding: 5px 16px; cursor: pointer;
+  width: 100%; transition: all 0.3s; border-radius: 2px;
+}
+.mb-secret-btn:hover { color: #66ff66; border-color: rgba(0,200,60,0.6); }
+.mb-secret-msg {
+  font-size: 0.5em; letter-spacing: 2px; text-align: center;
+  margin-top: 8px; min-height: 1.2em;
+}
+@keyframes shake-secret {
+  0%,100% { transform: translateX(0); }
+  25%,75% { transform: translateX(-7px); }
+  50% { transform: translateX(7px); }
+}
+.mb-shake { animation: shake-secret 0.35s ease; }
 
 /* Status */
 .status-bar {
@@ -1009,7 +1044,7 @@ body > * { position: relative; z-index: 1; }
 }
 .reset-btn {
   position: relative; transform: none;
-  background: transparent; border: 1px solid #330011; color: #552222;
+  background: transparent; border: 1px solid #661122; color: #aa3333;
   font-size: 0.48em; font-family: inherit; font-weight: bold;
   letter-spacing: 1.5px; padding: 3px 7px; cursor: pointer; border-radius: 2px;
   transition: all 0.3s; -webkit-tap-highlight-color: transparent;
@@ -1021,8 +1056,8 @@ body > * { position: relative; z-index: 1; }
 .ambient-btn {
   position: relative; transform: none;
   background: transparent;
-  border: 1px solid #004422;
-  color: #005c29;
+  border: 1px solid #115533;
+  color: #226644;
   font-size: 0.48em;
   font-family: inherit;
   font-weight: bold;
@@ -1049,8 +1084,8 @@ body > * { position: relative; z-index: 1; }
 .vig-btn {
   position: relative; transform: none;
   background: transparent;
-  border: 1px solid #440011;
-  color: #661122;
+  border: 1px solid #882233;
+  color: #aa2233;
   font-size: 0.48em;
   font-family: inherit;
   font-weight: bold;
@@ -1077,8 +1112,8 @@ body > * { position: relative; z-index: 1; }
 .vis-btn {
   position: relative; transform: none;
   background: transparent;
-  border: 1px solid #332200;
-  color: #443300;
+  border: 1px solid #665511;
+  color: #886622;
   font-size: 0.48em;
   font-family: inherit;
   font-weight: bold;
@@ -1096,8 +1131,8 @@ body > * { position: relative; z-index: 1; }
 .rpt-btn {
   position: relative; transform: none;
   background: transparent;
-  border: 1px solid #1a2200;
-  color: #2a3300;
+  border: 1px solid #445511;
+  color: #667722;
   font-size: 0.48em;
   font-family: inherit;
   font-weight: bold;
@@ -1114,8 +1149,8 @@ body > * { position: relative; z-index: 1; }
 .enhance-btn {
   position: relative; transform: none;
   background: transparent;
-  border: 1px solid #2a1040;
-  color: #3d1a5e;
+  border: 1px solid #5522aa;
+  color: #7733bb;
   font-size: 0.48em; font-family: inherit; font-weight: bold;
   letter-spacing: 1.5px; padding: 3px 7px;
   cursor: pointer; border-radius: 2px;
@@ -3907,6 +3942,13 @@ connectProactive();
       <button class="lang-opt" data-lang="nl" onclick="selectLang('nl')">NL</button>
     </div>
     <button class="mb-btn" id="mb-btn" onclick="submitName()">INITIER CONNEXION</button>
+    <div class="mb-secret-toggle" onclick="toggleSecretPin()">[ ACCES DIRECT ]</div>
+    <div class="mb-secret-box" id="mbSecretBox">
+      <input type="password" id="secretPin" placeholder="CODE" maxlength="6"
+             autocomplete="off" onkeydown="if(event.key==='Enter')checkSecretPin()">
+      <button class="mb-secret-btn" onclick="checkSecretPin()">VALIDER</button>
+      <div class="mb-secret-msg" id="mbSecretMsg"></div>
+    </div>
   </div>
 </div>
 
@@ -4546,6 +4588,42 @@ async function _visRefresh() {
         '</tr>';
     }).join('');
   } catch(e) { console.error('[VIS] refresh error', e); }
+}
+
+// ── Skip identification — code PIN ────────────────────────────────────────
+let _secretAttempts = 0;
+function toggleSecretPin() {
+  const box = document.getElementById('mbSecretBox');
+  const show = box.style.display !== 'block';
+  box.style.display = show ? 'block' : 'none';
+  if (show) setTimeout(() => document.getElementById('secretPin').focus(), 50);
+}
+function checkSecretPin() {
+  const pin = document.getElementById('secretPin').value.trim();
+  const msg = document.getElementById('mbSecretMsg');
+  if (pin === '5505') {
+    msg.style.color = '#44ff88';
+    msg.textContent = '[ ACCES AUTORISE ]';
+    const ov = document.getElementById('nameOverlay');
+    ov.style.transition = 'opacity 0.4s';
+    ov.style.opacity = '0';
+    setTimeout(() => {
+      ov.classList.remove('visible');
+      ov.style.opacity = ''; ov.style.transition = '';
+    }, 400);
+    unlockUI('Manix', 'fr');
+  } else {
+    _secretAttempts++;
+    msg.style.color = '#cc3333';
+    msg.textContent = '[ CODE INCORRECT ]';
+    document.getElementById('secretPin').value = '';
+    const nb = document.querySelector('.name-box');
+    nb.classList.add('mb-shake');
+    setTimeout(() => nb.classList.remove('mb-shake'), 400);
+    if (_secretAttempts >= 3) {
+      setTimeout(() => { toggleSecretPin(); _secretAttempts = 0; }, 800);
+    }
+  }
 }
 
 // ── Protection bouton RST ─────────────────────────────────────────────────
