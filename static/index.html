@@ -1795,12 +1795,12 @@ body.enhanced .message {
   <div class="mother-line">MU-TH-UR 6000 &nbsp;·&nbsp; NEURAL INTERFACE ACTIVE</div>
   <div class="header-btns">
     <button class="reset-btn" id="resetbtn" onclick="resetChat()" title="Vider l'historique KITT">RST</button>
-    <button class="vig-btn" id="vigbtn" onclick="toggleVigilance()" title="Mode Vigilance — surveillance caméra">VIG</button>
-    <button class="ambient-btn" id="ambientbtn" onclick="toggleAmbient()" title="Sons d'ambiance système">AMB</button>
+    <button class="vig-btn" id="vigbtn" onclick="_requireNightAuth(toggleVigilance)" title="Mode Vigilance — surveillance caméra">VIG</button>
+    <button class="ambient-btn" id="ambientbtn" onclick="_requireNightAuth(toggleAmbient)" title="Sons d'ambiance système">AMB</button>
     <button class="night-btn" id="nightbtn" onclick="toggleNightPanel()" title="Night Scheduler — améliorations autonomes">NIGHT</button>
     <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
-    <button class="rpt-btn" id="rptbtn" onclick="toggleRptPanel()" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
-    <button class="enhance-btn" id="enhancebtn" onclick="toggleEnhance()" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
+    <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
+    <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
   </div>
 </div>
 
