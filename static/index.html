@@ -1169,6 +1169,19 @@ body > * { position: relative; z-index: 1; }
   50% { box-shadow: 0 0 18px #aa44ff55; text-shadow: 0 0 8px #aa66ff66; }
 }
 
+/* ── Bouton Download HTML ── */
+.dl-btn {
+  position: relative; transform: none;
+  background: transparent;
+  border: 1px solid #114455;
+  color: #226677;
+  font-size: 0.48em; font-family: inherit; font-weight: bold;
+  letter-spacing: 1.5px; padding: 3px 7px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+}
+.dl-btn:hover { color: #44bbdd; border-color: #2299bb; box-shadow: 0 0 8px #44bbdd33; }
+
 /* === MODE AMELIORATION AUTO === */
 body.enhanced .message.kitt {
   background: rgba(140,0,0,0.12);
@@ -1801,6 +1814,7 @@ body.enhanced .message {
     <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
     <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
     <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
+    <button class="dl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
   </div>
 </div>
 
@@ -4626,6 +4640,11 @@ function checkSecretPin() {
       setTimeout(() => { toggleSecretPin(); _secretAttempts = 0; }, 800);
     }
   }
+}
+
+// ── Téléchargement index.html ─────────────────────────────────────────────
+function downloadHtml() {
+  window.location.href = '/api/download-html';
 }
 
 // ── Protection bouton RST ─────────────────────────────────────────────────

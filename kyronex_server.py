@@ -1909,6 +1909,19 @@ async def handle_download(request: web.Request) -> web.Response:
     )
 
 
+async def handle_download_html(request: web.Request) -> web.Response:
+    """GET /api/download-html — télécharge le index.html actuel."""
+    path = BASE_DIR / "static" / "index.html"
+    if not path.exists():
+        raise web.HTTPNotFound(text="index.html introuvable")
+    from datetime import datetime
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return web.FileResponse(
+        path,
+        headers={"Content-Disposition": f'attachment; filename="kitt-index-{stamp}.html"'}
+    )
+
+
 async def handle_list_pdfs(request: web.Request) -> web.Response:
     """GET /api/pdfs — liste les PDFs disponibles dans BASE_DIR."""
     pdfs = [
@@ -2174,6 +2187,7 @@ def create_app() -> web.Application:
     app.router.add_post("/api/memory", handle_memory_add)
     app.router.add_get("/api/proactive/ws", handle_proactive_ws)
     app.router.add_post("/api/vigilance", handle_vigilance)
+    app.router.add_get("/api/download-html", handle_download_html)
     # Night Scheduler
     app.router.add_get("/api/scheduler/status", handle_scheduler_status)
     app.router.add_post("/api/scheduler/start", handle_scheduler_start)
