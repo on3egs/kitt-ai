@@ -394,6 +394,22 @@ body > * { position: relative; z-index: 1; }
   border-top: 1px solid #1e1010;
   letter-spacing: 1px;
 }
+.typing {
+  display: inline-block;
+  letter-spacing: 2px;
+  color: rgba(255,140,140,0.75);
+  text-shadow: 0 0 8px rgba(220,40,0,0.6);
+  animation: typing-pulse 1.3s ease-in-out infinite;
+  -webkit-animation: typing-pulse 1.3s ease-in-out infinite;
+}
+@keyframes typing-pulse {
+  0%, 100% { opacity: 0.25; letter-spacing: 1px; }
+  50% { opacity: 1; letter-spacing: 5px; text-shadow: 0 0 14px rgba(220,40,0,0.95); }
+}
+@-webkit-keyframes typing-pulse {
+  0%, 100% { opacity: 0.25; letter-spacing: 1px; }
+  50% { opacity: 1; letter-spacing: 5px; }
+}
 .message.proactive {
   background: rgba(110, 55, 0, 0.14);
   border: none;
@@ -1046,40 +1062,49 @@ body > * { position: relative; z-index: 1; }
 /* ── MU-TH-UR 6000 — panneau diagnostic vert phosphore ── */
 .mother-panel {
   position: fixed;
-  bottom: 32px; right: 0;
-  width: 190px;
-  padding: 8px 10px 10px;
-  background: rgba(0,6,0,0.82);
-  border-left: 1px solid rgba(0,180,60,0.22);
-  border-top: 1px solid rgba(0,180,60,0.12);
+  top: 50%; right: 0;
+  transform: translateY(-50%);
+  width: 220px;
+  padding: 12px 14px 14px;
+  background: rgba(0,8,2,0.88);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-left: 1px solid rgba(0,220,80,0.28);
+  border-top: 1px solid rgba(0,220,80,0.15);
+  border-bottom: 1px solid rgba(0,220,80,0.15);
+  border-radius: 6px 0 0 6px;
   font-family: 'Courier New', monospace;
-  font-size: 0.5em;
-  color: #00bb3d;
-  letter-spacing: 0.8px;
-  line-height: 1.7;
+  font-size: 0.52em;
+  color: #00cc44;
+  letter-spacing: 0.9px;
+  line-height: 1.75;
   pointer-events: none;
   z-index: 3;
-  opacity: 0.72;
+  opacity: 0.88;
+  box-shadow: -4px 0 24px rgba(0,255,80,0.06), inset 0 0 20px rgba(0,40,10,0.4);
+  max-height: 70vh; overflow: hidden;
 }
 .mother-panel .mp-title {
-  color: #00ee55;
-  letter-spacing: 2.5px;
-  border-bottom: 1px solid rgba(0,180,60,0.25);
-  padding-bottom: 4px;
-  margin-bottom: 5px;
-  font-size: 1.05em;
+  color: #00ff66;
+  letter-spacing: 3px;
+  border-bottom: 1px solid rgba(0,220,80,0.3);
+  padding-bottom: 5px;
+  margin-bottom: 7px;
+  font-size: 1.1em;
+  text-shadow: 0 0 8px rgba(0,255,80,0.4);
 }
-.mother-panel .mp-row { display: flex; justify-content: space-between; gap: 4px; }
-.mother-panel .mp-label { color: #008833; flex-shrink: 0; }
-.mother-panel .mp-value { color: #00ff66; text-align: right; word-break: break-all; }
-.mother-panel { max-height: 60vh; overflow: hidden; }
-.mother-panel .mp-sep { border-top: 1px solid rgba(0,180,60,0.18); margin: 6px 0; }
+.mother-panel .mp-row { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 1px; }
+.mother-panel .mp-label { color: #007733; flex-shrink: 0; letter-spacing: 1.5px; }
+.mother-panel .mp-value { color: #00ff77; text-align: right; word-break: break-all; }
+.mother-panel .mp-sep { border-top: 1px solid rgba(0,180,60,0.2); margin: 7px 0; }
 .mother-panel .mp-mem-item {
-  color: #00ee55; font-size: 0.92em; line-height: 1.5;
-  border-bottom: 1px solid rgba(0,100,30,0.12);
-  padding-bottom: 3px; margin-bottom: 3px; word-break: break-word;
+  color: #00dd55; font-size: 0.93em; line-height: 1.55;
+  border-bottom: 1px solid rgba(0,120,40,0.15);
+  padding-bottom: 4px; margin-bottom: 4px; word-break: break-word;
 }
-.mother-panel .mp-mem-user { color: #006633; font-size: 0.8em; letter-spacing: 1px; }
+.mother-panel .mp-mem-user {
+  color: #005522; font-size: 0.82em; letter-spacing: 1.2px;
+}
 @media (max-width: 600px) { .mother-panel { display: none; } }
 
 /* ── Badge stats mobile (sous scanner) ── */
@@ -1760,6 +1785,7 @@ body.enhanced .message {
 .conn-panel .cp-sep { border-top: 1px solid rgba(0,100,30,0.2); margin: 5px 0; }
 .conn-panel .cp-ip { color: #008833; word-break: break-all; }
 .conn-panel .cp-name { color: #00cc44; }
+.conn-panel { display: none !important; }
 @media (max-width: 700px) { .conn-panel { display: none; } }
 
 /* ── Mode paysage mobile ── */
@@ -3141,6 +3167,8 @@ async function _refreshStats() {
     if (cur) cur.textContent = d.current;
     const msOnline = document.getElementById('ms-online');
     if (msOnline && d.current !== undefined) msOnline.textContent = d.current;
+    const mpOnline = document.getElementById('mp-online-count');
+    if (mpOnline && d.current !== undefined) mpOnline.textContent = d.current;
     if (sess) {
       sess.innerHTML = (d.active_sessions || []).slice(0, 5).map(s =>
         `<div class="cp-ip">${s.ip} <span class="cp-name">${s.name} [${(s.lang||'?').toUpperCase()}]</span></div>`
@@ -4004,13 +4032,14 @@ connectProactive();
 </div>
 
 <div class="mother-panel" id="motherPanel" aria-hidden="true">
-  <div class="mp-title">MU-TH-UR 6000</div>
+  <div class="mp-title">&#9632; MU-TH-UR 6000</div>
   <div class="mp-row"><span class="mp-label">STATUS</span><span class="mp-value" id="mp-status">INIT</span></div>
+  <div class="mp-row"><span class="mp-label">OPERATEUR</span><span class="mp-value" id="mp-session">—</span></div>
   <div class="mp-row"><span class="mp-label">LANG</span><span class="mp-value" id="mp-lang">—</span></div>
-  <div class="mp-row"><span class="mp-label">SESSION</span><span class="mp-value" id="mp-session">—</span></div>
-  <div class="mp-row"><span class="mp-label">TIME</span><span class="mp-value" id="mp-time">—</span></div>
+  <div class="mp-row"><span class="mp-label">HEURE</span><span class="mp-value" id="mp-time">—</span></div>
+  <div class="mp-row"><span class="mp-label">ONLINE</span><span class="mp-value" id="mp-online-count">—</span></div>
   <div class="mp-sep"></div>
-  <div class="mp-title" style="font-size:0.9em;margin-top:4px">MEMOIRE</div>
+  <div class="mp-title" style="font-size:0.88em;letter-spacing:2px;margin-bottom:5px">&#9632; MEMOIRE KITT</div>
   <div id="mp-memory-list"></div>
 </div>
 
