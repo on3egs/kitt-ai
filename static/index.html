@@ -182,6 +182,43 @@ body > * { position: relative; z-index: 1; }
   }
 }
 
+/* ── Dock KITT mobile — clavier ouvert ───────────────────────── */
+@media (max-width: 700px) {
+  /* Quand le clavier virtuel est détecté */
+  body.keyboard-open .scanner-container { display: none; }
+  body.keyboard-open .mobile-stats { display: none; }
+  body.keyboard-open .header .subtitle { display: none; }
+  body.keyboard-open .header .mother-line { display: none; }
+  body.keyboard-open .header-btns { display: none; }
+  body.keyboard-open .header { padding: 6px 10px; min-height: unset; }
+
+  /* Barre input ancrée au clavier — style KITT dock */
+  body.keyboard-open .input-area {
+    background: #060606;
+    border-top: 2px solid #550000;
+    box-shadow: 0 -8px 30px #ff000020, 0 -2px 0 #330000;
+    padding-top: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+  }
+  body.keyboard-open .input-area input {
+    border-color: #550000;
+    border-bottom-color: #880000;
+    background: #0d0000;
+    font-size: 16px;
+  }
+  body.keyboard-open .input-area input:focus {
+    border-color: #990000;
+    border-bottom-color: #cc2200;
+    box-shadow: 0 2px 16px #ff000033, inset 0 0 12px #ff000012;
+    color: #ffcccc;
+  }
+  /* Ligne décorative KITT au-dessus du dock */
+  body.keyboard-open .input-area::before {
+    background: linear-gradient(90deg, transparent, #880000, #ff2200, #880000, transparent);
+    opacity: 0.8;
+  }
+}
+
 /* Scanner */
 .scanner-container {
   display: flex;
@@ -3270,6 +3307,43 @@ function _updateLangDetection(lang, text, source) {
     console.warn('[KYRONEX · LANG] Langue non supportée: "' + lang + '" — ignorée');
   }
 }
+
+// ── Gestion clavier mobile (visualViewport API) ──────────────────
+(function _initMobileKeyboard() {
+  if (!window.visualViewport) return;
+  const chat = document.getElementById('chat');
+  let _kbOpen = false;
+
+  function _onVVResize() {
+    const vv = window.visualViewport;
+    const kbHeight = (window.innerHeight - vv.height) - vv.offsetTop;
+    const kbOpen = kbHeight > 120;
+    if (kbOpen === _kbOpen) return;
+    _kbOpen = kbOpen;
+    document.body.classList.toggle('keyboard-open', kbOpen);
+    if (kbOpen) {
+      // Redimensionner le body au viewport visuel
+      document.body.style.height = vv.height + 'px';
+      document.body.style.top = vv.offsetTop + 'px';
+      // Scroll chat en bas pour voir le dernier message
+      setTimeout(() => { if (chat) chat.scrollTop = chat.scrollHeight; }, 150);
+    } else {
+      document.body.style.height = '';
+      document.body.style.top = '';
+    }
+  }
+
+  window.visualViewport.addEventListener('resize', _onVVResize);
+  window.visualViewport.addEventListener('scroll', _onVVResize);
+
+  // Focus/blur sur l'input texte pour forcer le scroll
+  const inp = document.getElementById('input');
+  if (inp) {
+    inp.addEventListener('focus', () => {
+      setTimeout(() => { if (chat) chat.scrollTop = chat.scrollHeight; }, 350);
+    });
+  }
+})();
 
 // ── MOTHER panel — mise à jour toutes les secondes ─────────────
 (function _initMotherPanel() {
