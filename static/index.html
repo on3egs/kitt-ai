@@ -15,7 +15,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { height: 100%; overflow: hidden; }
 body {
-  background: #080808;
+  background: radial-gradient(ellipse at 50% 30%, #0f0000 0%, #050000 40%, #020000 100%);
   color: #e0e0e0;
   font-family: 'Courier New', monospace;
   position: fixed;
@@ -227,9 +227,7 @@ body > * { position: relative; z-index: 1; }
 
 /* Scanner */
 .scanner-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
+  display: none;
 }
 .scanner {
   width: min(300px, 80vw);
@@ -671,9 +669,7 @@ body > * { position: relative; z-index: 1; }
 
 /* Voicebox KITT — barres réactives audio */
 .voicebox-container {
-  display: flex;
-  justify-content: center;
-  padding: 0 20px 8px;
+  display: none;
 }
 #voicebox {
   display: block;
@@ -1055,50 +1051,120 @@ body > * { position: relative; z-index: 1; }
 }
 
 /* ── MU-TH-UR 6000 — panneau diagnostic vert phosphore ── */
+/* ═══════════════════════════════════════════════
+   MU-TH-UR 6000 — PANNEAU DROIT REDESIGN COMPLET
+   ═══════════════════════════════════════════════ */
 .mother-panel {
   position: fixed;
   top: 50%; right: 0;
   transform: translateY(-50%);
-  width: 220px;
-  padding: 12px 14px 14px;
-  background: rgba(0,8,2,0.88);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-left: 1px solid rgba(0,220,80,0.28);
-  border-top: 1px solid rgba(0,220,80,0.15);
-  border-bottom: 1px solid rgba(0,220,80,0.15);
-  border-radius: 6px 0 0 6px;
+  width: 200px;
+  background: linear-gradient(160deg, rgba(0,12,4,0.97) 0%, rgba(0,6,2,0.99) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(0,255,100,0.22);
+  border-top: 1px solid rgba(0,255,100,0.12);
+  border-bottom: 1px solid rgba(0,255,100,0.12);
+  border-radius: 10px 0 0 10px;
   font-family: 'Courier New', monospace;
-  font-size: 0.52em;
-  color: #00cc44;
-  letter-spacing: 0.9px;
-  line-height: 1.75;
+  font-size: 0.5em;
+  color: #00bb44;
+  letter-spacing: 1px;
+  line-height: 1.8;
   pointer-events: none;
   z-index: 3;
-  opacity: 0.88;
-  box-shadow: -4px 0 24px rgba(0,255,80,0.06), inset 0 0 20px rgba(0,40,10,0.4);
-  max-height: 70vh; overflow: hidden;
+  overflow: hidden;
+  max-height: 75vh;
+  box-shadow:
+    -6px 0 30px rgba(0,255,80,0.08),
+    -2px 0 8px rgba(0,255,80,0.04),
+    inset 1px 0 0 rgba(0,255,100,0.05),
+    inset 0 0 40px rgba(0,20,8,0.6);
+}
+/* Scan line animé dans le panneau */
+.mother-panel::before {
+  content: '';
+  position: absolute; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,255,80,0.25), transparent);
+  animation: mp-scan 5s linear infinite;
+  pointer-events: none; z-index: 1;
+}
+@keyframes mp-scan { 0% { top: -2px; } 100% { top: 101%; } }
+/* Effet CRT lignes horizontales */
+.mother-panel::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 3px
+  );
+  pointer-events: none; z-index: 0;
+}
+/* Bandeau titre */
+.mother-panel .mp-header-band {
+  background: linear-gradient(90deg, rgba(0,40,15,0.9), rgba(0,20,8,0.6));
+  border-bottom: 1px solid rgba(0,255,100,0.18);
+  padding: 8px 12px 6px;
+  position: relative; z-index: 2;
+}
+.mother-panel .mp-corp {
+  font-size: 0.75em; letter-spacing: 3px;
+  color: rgba(0,180,60,0.5); margin-bottom: 1px;
 }
 .mother-panel .mp-title {
-  color: #00ff66;
-  letter-spacing: 3px;
-  border-bottom: 1px solid rgba(0,220,80,0.3);
-  padding-bottom: 5px;
-  margin-bottom: 7px;
-  font-size: 1.1em;
-  text-shadow: 0 0 8px rgba(0,255,80,0.4);
+  color: #00ff77;
+  letter-spacing: 4px;
+  font-size: 1.15em;
+  font-weight: bold;
+  text-shadow: 0 0 12px rgba(0,255,100,0.5), 0 0 30px rgba(0,255,100,0.15);
 }
-.mother-panel .mp-row { display: flex; justify-content: space-between; gap: 6px; margin-bottom: 1px; }
-.mother-panel .mp-label { color: #007733; flex-shrink: 0; letter-spacing: 1.5px; }
-.mother-panel .mp-value { color: #00ff77; text-align: right; word-break: break-all; }
-.mother-panel .mp-sep { border-top: 1px solid rgba(0,180,60,0.2); margin: 7px 0; }
+/* Corps données */
+.mother-panel .mp-body {
+  padding: 8px 12px 10px;
+  position: relative; z-index: 2;
+}
+.mother-panel .mp-row {
+  display: flex; justify-content: space-between;
+  gap: 4px; margin-bottom: 2px; align-items: baseline;
+}
+.mother-panel .mp-label {
+  color: #006633; flex-shrink: 0;
+  letter-spacing: 1.5px; font-size: 0.9em;
+}
+.mother-panel .mp-value {
+  color: #00ff77; text-align: right;
+  word-break: break-all; font-size: 0.95em;
+  text-shadow: 0 0 6px rgba(0,255,100,0.3);
+}
+.mother-panel .mp-sep {
+  border: none;
+  border-top: 1px solid rgba(0,200,80,0.12);
+  margin: 6px 0;
+  position: relative;
+}
+.mother-panel .mp-sep::after {
+  content: ''; position: absolute;
+  left: 20%; right: 20%; top: 0; height: 1px;
+  background: rgba(0,255,80,0.1);
+  box-shadow: 0 0 4px rgba(0,255,80,0.15);
+}
+/* Section mémoire */
+.mother-panel .mp-mem-title {
+  color: #005522; font-size: 0.85em;
+  letter-spacing: 3px; margin-bottom: 5px;
+  padding-top: 2px;
+}
 .mother-panel .mp-mem-item {
-  color: #00dd55; font-size: 0.93em; line-height: 1.55;
-  border-bottom: 1px solid rgba(0,120,40,0.15);
-  padding-bottom: 4px; margin-bottom: 4px; word-break: break-word;
+  background: rgba(0,30,10,0.4);
+  border: 1px solid rgba(0,150,50,0.1);
+  border-left: 2px solid rgba(0,255,80,0.2);
+  border-radius: 0 3px 3px 0;
+  color: #00cc55; font-size: 0.9em; line-height: 1.5;
+  padding: 3px 6px; margin-bottom: 4px;
+  word-break: break-word;
 }
 .mother-panel .mp-mem-user {
-  color: #005522; font-size: 0.82em; letter-spacing: 1.2px;
+  color: #004422; font-size: 0.8em;
+  letter-spacing: 1.5px; margin-top: 1px;
 }
 @media (max-width: 600px) { .mother-panel { display: none; } }
 
@@ -4031,15 +4097,20 @@ connectProactive();
 </div>
 
 <div class="mother-panel" id="motherPanel" aria-hidden="true">
-  <div class="mp-title">&#9632; MU-TH-UR 6000</div>
-  <div class="mp-row"><span class="mp-label">STATUS</span><span class="mp-value" id="mp-status">INIT</span></div>
-  <div class="mp-row"><span class="mp-label">OPERATEUR</span><span class="mp-value" id="mp-session">—</span></div>
-  <div class="mp-row"><span class="mp-label">LANG</span><span class="mp-value" id="mp-lang">—</span></div>
-  <div class="mp-row"><span class="mp-label">HEURE</span><span class="mp-value" id="mp-time">—</span></div>
-  <div class="mp-row"><span class="mp-label">ONLINE</span><span class="mp-value" id="mp-online-count">—</span></div>
-  <div class="mp-sep"></div>
-  <div class="mp-title" style="font-size:0.88em;letter-spacing:2px;margin-bottom:5px">&#9632; MEMOIRE KITT</div>
-  <div id="mp-memory-list"></div>
+  <div class="mp-header-band">
+    <div class="mp-corp">WEYLAND-YUTANI CORP.</div>
+    <div class="mp-title">MU-TH-UR 6000</div>
+  </div>
+  <div class="mp-body">
+    <div class="mp-row"><span class="mp-label">STATUS</span><span class="mp-value" id="mp-status">INIT</span></div>
+    <div class="mp-row"><span class="mp-label">OPERATEUR</span><span class="mp-value" id="mp-session">—</span></div>
+    <div class="mp-row"><span class="mp-label">LANGUE</span><span class="mp-value" id="mp-lang">—</span></div>
+    <div class="mp-row"><span class="mp-label">HEURE</span><span class="mp-value" id="mp-time">—</span></div>
+    <div class="mp-row"><span class="mp-label">CONNECTES</span><span class="mp-value" id="mp-online-count">—</span></div>
+    <div class="mp-sep"></div>
+    <div class="mp-mem-title">&#9632; MEMOIRE ACTIVE</div>
+    <div id="mp-memory-list"></div>
+  </div>
 </div>
 
 <div class="footer-credit" onclick="document.getElementById('about').classList.add('visible')">&copy; 2026 ByManix</div>
