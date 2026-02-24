@@ -173,8 +173,13 @@ body > * { position: relative; z-index: 1; }
     width: 48px !important; height: 48px !important;
     min-width: 48px; flex-shrink: 0;
   }
-  /* Zone tactile 44px minimum pour les boutons header (RST/NIGHT/VIG/AMB) */
-  .reset-btn::before, .ambient-btn::before, .vig-btn::before, .night-btn::before {
+  /* Zone tactile 44px minimum pour les boutons header (RST/AMB/VIG/NIGHT/VIS/RPT/AUTO) */
+  /* position:relative obligatoire pour que ::before absolu soit ancré sur le bouton */
+  .reset-btn, .ambient-btn, .vig-btn, .night-btn, .vis-btn, .rpt-btn, .enhance-btn {
+    position: relative;
+  }
+  .reset-btn::before, .ambient-btn::before, .vig-btn::before, .night-btn::before,
+  .vis-btn::before, .rpt-btn::before, .enhance-btn::before {
     content: '';
     position: absolute;
     top: -12px; bottom: -12px;
@@ -316,8 +321,10 @@ body > * { position: relative; z-index: 1; }
 }
 .message.user {
   align-self: flex-end;
-  background: none;
+  background: rgba(0, 80, 0, 0.08);
   border: none;
+  border-right: 2px solid rgba(42, 122, 42, 0.45);
+  border-radius: 6px 0 0 6px;
   color: #7dcc7d;
 }
 .message.user::before {
@@ -326,8 +333,10 @@ body > * { position: relative; z-index: 1; }
 }
 .message.kitt {
   align-self: flex-start;
-  background: none;
+  background: rgba(120, 0, 0, 0.08);
   border: none;
+  border-left: 2px solid rgba(204, 34, 0, 0.5);
+  border-radius: 0 6px 6px 0;
   color: #ff9a9a;
 }
 .message.kitt::before {
@@ -346,8 +355,10 @@ body > * { position: relative; z-index: 1; }
   letter-spacing: 1px;
 }
 .message.proactive {
-  background: none;
+  background: rgba(100, 50, 0, 0.07);
   border: none;
+  border-left: 2px solid rgba(255, 136, 0, 0.4);
+  border-radius: 0 6px 6px 0;
   color: #ffaa44;
   font-style: italic;
 }
@@ -432,6 +443,14 @@ body > * { position: relative; z-index: 1; }
 @keyframes kitt-send-pulse {
   0%, 100% { background: linear-gradient(180deg, #1a0000, #0d0000); border-color: #440000; border-bottom-color: #220000; box-shadow: none; }
   50%       { background: linear-gradient(180deg, #880000, #550000); border-color: #cc0000; border-bottom-color: #440000; box-shadow: 0 0 14px #ff000055, inset 0 0 8px #ff000011; }
+}
+.input-area button#send.ready:not(.sending):not(:disabled) {
+  animation: kitt-send-ready 1.6s ease-in-out infinite;
+  border-bottom-color: #cc2200;
+}
+@keyframes kitt-send-ready {
+  0%, 100% { box-shadow: 0 0 6px #ff000044; }
+  50%       { box-shadow: 0 0 18px #ff000099, 0 0 32px #ff220033; }
 }
 
 /* Mic buttons */
@@ -821,9 +840,30 @@ body > * { position: relative; z-index: 1; }
 }
 #send:active { transform: scale(0.97); transition: transform 0.08s ease; }
 
-/* ── Focus input — glow container ── */
+/* ── Focus input — glow container + scanner sweep ── */
 .input-area:focus-within {
   background: linear-gradient(0deg, #0d0000 0%, transparent 100%);
+  box-shadow: 0 -4px 20px #ff000018;
+}
+.input-area::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ff2200 50%, transparent) no-repeat;
+  background-size: 40% 100%;
+  background-position: -40% 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+.input-area:focus-within::after {
+  opacity: 1;
+  animation: kitt-scan-sweep 2.2s linear infinite;
+}
+@keyframes kitt-scan-sweep {
+  0%   { background-position: -40% 0; }
+  100% { background-position: 140% 0; }
 }
 
 /* ── Sphère holographique 3D CSS ── */
@@ -968,7 +1008,7 @@ body > * { position: relative; z-index: 1; }
   align-items: center;
 }
 .reset-btn {
-  position: static; transform: none;
+  position: relative; transform: none;
   background: transparent; border: 1px solid #330011; color: #552222;
   font-size: 0.48em; font-family: inherit; font-weight: bold;
   letter-spacing: 1.5px; padding: 3px 7px; cursor: pointer; border-radius: 2px;
@@ -979,7 +1019,7 @@ body > * { position: relative; z-index: 1; }
 
 /* ── Bouton sons d'ambiance (dans header) ── */
 .ambient-btn {
-  position: static; transform: none;
+  position: relative; transform: none;
   background: transparent;
   border: 1px solid #004422;
   color: #005c29;
@@ -1007,7 +1047,7 @@ body > * { position: relative; z-index: 1; }
 
 /* ── Bouton Vigilance (dans header, à gauche de AMB) ── */
 .vig-btn {
-  position: static; transform: none;
+  position: relative; transform: none;
   background: transparent;
   border: 1px solid #440011;
   color: #661122;
@@ -1035,8 +1075,7 @@ body > * { position: relative; z-index: 1; }
 
 /* ── Bouton Visiteurs (dans header, à gauche de NIGHT) ── */
 .vis-btn {
-  position: absolute;
-  position: static; transform: none;
+  position: relative; transform: none;
   background: transparent;
   border: 1px solid #332200;
   color: #443300;
@@ -1055,8 +1094,7 @@ body > * { position: relative; z-index: 1; }
 
 /* ── Bouton Rapport Mode Auto (dans header, à gauche de VIS) ── */
 .rpt-btn {
-  position: absolute;
-  position: static; transform: none;
+  position: relative; transform: none;
   background: transparent;
   border: 1px solid #1a2200;
   color: #2a3300;
@@ -1072,6 +1110,57 @@ body > * { position: relative; z-index: 1; }
 }
 .rpt-btn:hover { color: #aacc00; border-color: #88aa00; box-shadow: 0 0 8px #aacc0033; }
 .rpt-btn.active { color: #ccee22; border-color: #aacc00; box-shadow: 0 0 10px #aacc0044; }
+
+.enhance-btn {
+  position: relative; transform: none;
+  background: transparent;
+  border: 1px solid #2a1040;
+  color: #3d1a5e;
+  font-size: 0.48em; font-family: inherit; font-weight: bold;
+  letter-spacing: 1.5px; padding: 3px 7px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+}
+.enhance-btn:hover { color: #8844cc; border-color: #7733bb; box-shadow: 0 0 8px #aa44ff33; }
+.enhance-btn.active {
+  color: #aa66ff; border-color: #8833dd;
+  box-shadow: 0 0 10px #aa44ff44;
+  animation: enhance-pulse 3s ease-in-out infinite;
+}
+@keyframes enhance-pulse {
+  0%,100% { box-shadow: 0 0 6px #aa44ff22; text-shadow: none; }
+  50% { box-shadow: 0 0 18px #aa44ff55; text-shadow: 0 0 8px #aa66ff66; }
+}
+
+/* === MODE AMELIORATION AUTO === */
+body.enhanced .message.kitt {
+  background: rgba(140,0,0,0.12);
+  border-left-color: rgba(255,50,0,0.65);
+  box-shadow: -2px 0 12px rgba(255,0,0,0.08);
+}
+body.enhanced .message.user {
+  background: rgba(0,100,0,0.10);
+  border-right-color: rgba(50,180,50,0.55);
+  box-shadow: 2px 0 10px rgba(0,255,0,0.06);
+}
+body.enhanced .input-area input:focus {
+  box-shadow: 0 2px 20px #ff000033, inset 0 0 16px #ff000010, 0 0 35px #ff000011;
+}
+body.enhanced #send:not(:disabled):not(.sending) {
+  box-shadow: 0 0 15px #ff000033, 0 2px 8px #cc000044;
+}
+body.enhanced .chat-area {
+  box-shadow:
+    inset 0 0 60px rgba(160,0,0,0.07),
+    inset 0 16px 32px rgba(0,0,0,0.32),
+    inset 0 -16px 32px rgba(0,0,0,0.32);
+}
+body.enhanced .header h1 {
+  text-shadow: 0 0 30px #ff0000, 0 0 65px #ff000055, 0 0 100px #ff000022;
+}
+body.enhanced .message {
+  transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+}
 
 /* ── Overlay Rapport Mode Auto ── */
 .rpt-overlay {
@@ -1243,7 +1332,7 @@ body > * { position: relative; z-index: 1; }
 
 /* ── Bouton Night Scheduler (dans header, à gauche de VIG) ── */
 .night-btn {
-  position: static; transform: none;
+  position: relative; transform: none;
   background: transparent;
   border: 1px solid #002244;
   color: #003366;
@@ -1674,6 +1763,7 @@ body > * { position: relative; z-index: 1; }
     <button class="night-btn" id="nightbtn" onclick="toggleNightPanel()" title="Night Scheduler — améliorations autonomes">NIGHT</button>
     <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
     <button class="rpt-btn" id="rptbtn" onclick="toggleRptPanel()" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
+    <button class="enhance-btn" id="enhancebtn" onclick="toggleEnhance()" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
   </div>
 </div>
 
@@ -1748,6 +1838,7 @@ let speechStart = 0;
 let autoProcessing = false;
 
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !sendBtn.disabled) sendMessage(); });
+input.addEventListener('input', () => { sendBtn.classList.toggle('ready', input.value.trim().length > 0); });
 
 const CHAT_HISTORY_KEY = 'kyronex_chat_history';
 const CHAT_HISTORY_MAX = 20;
@@ -1797,6 +1888,7 @@ async function sendMessage() {
 
   addMessage(msg, 'user');
   input.value = '';
+  sendBtn.classList.remove('ready');
   sendBtn.disabled = true;
   sendBtn.classList.add('sending');
   await streamChat(msg);
@@ -3460,6 +3552,7 @@ const _UI_STRINGS = {
     history_cleared: 'Historique efface',
     camera_capture: 'Capture camera...',
     cmd_detected: 'Commande detectee...',
+    enhance_active: 'OPTIMISATION ACTIVE',
   },
   en: {
     modal_title: 'IDENTIFICATION',
@@ -3486,6 +3579,7 @@ const _UI_STRINGS = {
     history_cleared: 'History cleared',
     camera_capture: 'Camera capture...',
     cmd_detected: 'Command detected...',
+    enhance_active: 'OPTIMIZATION ACTIVE',
   },
   de: {
     modal_title: 'IDENTIFIKATION',
@@ -3512,6 +3606,7 @@ const _UI_STRINGS = {
     history_cleared: 'Verlauf geloscht',
     camera_capture: 'Kamera-Aufnahme...',
     cmd_detected: 'Befehl erkannt...',
+    enhance_active: 'OPTIMIERUNG AKTIV',
   },
   it: {
     modal_title: 'IDENTIFICAZIONE',
@@ -3538,6 +3633,7 @@ const _UI_STRINGS = {
     history_cleared: 'Cronologia cancellata',
     camera_capture: 'Acquisizione fotocamera...',
     cmd_detected: 'Comando rilevato...',
+    enhance_active: 'OTTIMIZZAZIONE ATTIVA',
   },
   pt: {
     modal_title: 'IDENTIFICACAO',
@@ -3564,6 +3660,7 @@ const _UI_STRINGS = {
     history_cleared: 'Historico limpo',
     camera_capture: 'Captura de camara...',
     cmd_detected: 'Comando detectado...',
+    enhance_active: 'OTIMIZACAO ATIVA',
   },
   es: {
     modal_title: 'IDENTIFICACION',
@@ -3590,6 +3687,7 @@ const _UI_STRINGS = {
     history_cleared: 'Historial borrado',
     camera_capture: 'Captura de camara...',
     cmd_detected: 'Comando detectado...',
+    enhance_active: 'OPTIMIZACION ACTIVA',
   },
   nl: {
     modal_title: 'IDENTIFICATIE',
@@ -3616,6 +3714,7 @@ const _UI_STRINGS = {
     history_cleared: 'Geschiedenis gewist',
     camera_capture: 'Camera-opname...',
     cmd_detected: 'Opdracht gedetecteerd...',
+    enhance_active: 'OPTIMALISATIE ACTIEF',
   },
 };
 
@@ -4279,6 +4378,26 @@ function toggleRptPanel() {
   if (visible) _loadAutoReport();
 }
 
+let _enhanceActive = false;
+function toggleEnhance() {
+  _enhanceActive = !_enhanceActive;
+  const btn = document.getElementById('enhancebtn');
+  btn.classList.toggle('active', _enhanceActive);
+  document.body.classList.toggle('enhanced', _enhanceActive);
+  if (_enhanceActive) {
+    _applyUILang(_preferredLang);
+    const PH = {
+      fr:'Parlez a KITT...',en:'Speak to KITT...',de:'Sprechen Sie mit KITT...',
+      it:'Parla con KITT...',pt:'Fale com KITT...',es:'Hable con KITT...',nl:'Spreek met KITT...'
+    };
+    const input = document.getElementById('input');
+    if (input && !input.disabled) input.placeholder = PH[_preferredLang] || PH.fr;
+    const statusEl = document.getElementById('status');
+    if (statusEl) statusEl.innerHTML = '<span class="online">' + _t('enhance_active') + '</span>';
+    setTimeout(() => { if (_enhanceActive) checkHealth(); }, 1500);
+  }
+}
+
 async function _loadAutoReport() {
   const body = document.getElementById('rptBody');
   body.innerHTML = '<div class="rpt-loading">Chargement...</div>';
@@ -4367,6 +4486,7 @@ function _renderAutoReport(d) {
     {iter:'v01', time:'04h36', action:'Animations apparition messages', detail:'msgAppear/Left/Right — bulles KITT glissent depuis gauche, user depuis droite. cubic-bezier 0.25→0.46, scale 0.97→1, compatible Safari.'},
     {iter:'v02', time:'04h39', action:'Bouton SEND pulse pendant envoi', detail:'Classe .sending sur #send — fond rouge pulsant @kitt-send-pulse, cursor:wait. Retiré automatiquement après réponse.'},
     {iter:'v03', time:'04h40', action:'Zone tactile mobile 44px + PDF', detail:'::before sur RST/AMB/VIG/NIGHT pour cibles tactiles élargies. Section DOCUMENTATION PDF dans panneau nuit.'},
+    {iter:'v04', time:'', action:'Scanner sweep input focus', detail:'::after sur .input-area — lueur rouge balaie la ligne du haut (left→right, 2.2s linear) dès focus-within. Glow box-shadow -4px haut.'},
   ];
   for (const k of known) {
     html += '<div style="margin-bottom:10px;padding:8px;border-left:2px solid #334400">';
