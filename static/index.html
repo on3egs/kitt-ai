@@ -1181,6 +1181,26 @@ body > * { position: relative; z-index: 1; }
   transition: all 0.3s; -webkit-tap-highlight-color: transparent;
 }
 .dl-btn:hover { color: #44bbdd; border-color: #2299bb; box-shadow: 0 0 8px #44bbdd33; }
+.git-btn {
+  position: relative; transform: none;
+  background: transparent; border: 1px solid #115522; color: #227744;
+  font-size: 0.48em; font-family: inherit; font-weight: bold;
+  letter-spacing: 1.5px; padding: 3px 7px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+}
+.git-btn:hover { color: #44ff88; border-color: #22cc55; box-shadow: 0 0 8px #44ff8833; }
+.git-btn.pushing { color: #ffaa00; border-color: #cc8800; }
+.run-btn {
+  position: relative; transform: none;
+  background: transparent; border: 1px solid #442200; color: #884400;
+  font-size: 0.48em; font-family: inherit; font-weight: bold;
+  letter-spacing: 1.5px; padding: 3px 7px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+}
+.run-btn:hover { color: #ffaa44; border-color: #cc6600; box-shadow: 0 0 8px #ffaa4433; }
+.run-btn.running { color: #ff8800; border-color: #ff6600; animation: enhance-pulse 1s ease-in-out infinite; }
 
 /* === MODE AMELIORATION AUTO === */
 body.enhanced .message.kitt {
@@ -1815,6 +1835,8 @@ body.enhanced .message {
     <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
     <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
     <button class="dl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
+    <button class="git-btn" id="gitbtn" onclick="_requireNightAuth(gitPushHtml)" title="Pousser index.html vers GitHub">GIT</button>
+    <button class="run-btn" id="runbtn" onclick="_requireNightAuth(runImprove)" title="Lancer une amélioration autonome maintenant">RUN</button>
   </div>
 </div>
 
@@ -4645,6 +4667,36 @@ function checkSecretPin() {
 // ── Téléchargement index.html ─────────────────────────────────────────────
 function downloadHtml() {
   window.location.href = '/api/download-html';
+}
+
+// ── Git push index.html → GitHub ──────────────────────────────────────────
+async function gitPushHtml() {
+  const btn = document.getElementById('gitbtn');
+  btn.classList.add('pushing'); btn.textContent = '...';
+  try {
+    const r = await fetch('/api/git-push-html', {method:'POST'});
+    const d = await r.json();
+    btn.textContent = d.ok ? 'OK' : 'ERR';
+    btn.style.color = d.ok ? '#44ff88' : '#ff4444';
+    setTimeout(() => { btn.textContent = 'GIT'; btn.classList.remove('pushing'); btn.style.color = ''; }, 2500);
+  } catch(e) {
+    btn.textContent = 'ERR'; setTimeout(() => { btn.textContent = 'GIT'; btn.classList.remove('pushing'); }, 2500);
+  }
+}
+
+// ── Lancer amélioration autonome maintenant ────────────────────────────────
+async function runImprove() {
+  const btn = document.getElementById('runbtn');
+  btn.classList.add('running'); btn.textContent = '...';
+  try {
+    const r = await fetch('/api/scheduler/run-now', {method:'POST'});
+    const d = await r.json();
+    btn.textContent = d.ok ? 'OK' : 'ERR';
+    btn.style.color = d.ok ? '#ffaa44' : '#ff4444';
+    setTimeout(() => { btn.textContent = 'RUN'; btn.classList.remove('running'); btn.style.color = ''; }, 3000);
+  } catch(e) {
+    btn.textContent = 'ERR'; setTimeout(() => { btn.textContent = 'RUN'; btn.classList.remove('running'); }, 3000);
+  }
 }
 
 // ── Protection bouton RST ─────────────────────────────────────────────────

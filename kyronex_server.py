@@ -1909,6 +1909,35 @@ async def handle_download(request: web.Request) -> web.Response:
     )
 
 
+async def handle_git_push_html(request: web.Request) -> web.Response:
+    """POST /api/git-push-html — commit + push static/index.html vers GitHub."""
+    import asyncio, subprocess
+    from datetime import datetime
+    stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "git", "-C", str(BASE_DIR), "add", "static/index.html",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        await proc.communicate()
+        proc2 = await asyncio.create_subprocess_exec(
+            "git", "-C", str(BASE_DIR), "commit", "-m", f"auto: push index.html via KITT UI ({stamp})",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        out2, err2 = await proc2.communicate()
+        proc3 = await asyncio.create_subprocess_exec(
+            "git", "-C", str(BASE_DIR), "push",
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        out3, err3 = await proc3.communicate()
+        if proc3.returncode == 0:
+            return web.json_response({"ok": True, "msg": f"Push OK — {stamp}"})
+        else:
+            return web.json_response({"ok": False, "msg": err3.decode()[:200]})
+    except Exception as e:
+        return web.json_response({"ok": False, "msg": str(e)})
+
+
 async def handle_download_html(request: web.Request) -> web.Response:
     """GET /api/download-html — télécharge le index.html actuel."""
     path = BASE_DIR / "static" / "index.html"
@@ -2188,6 +2217,7 @@ def create_app() -> web.Application:
     app.router.add_get("/api/proactive/ws", handle_proactive_ws)
     app.router.add_post("/api/vigilance", handle_vigilance)
     app.router.add_get("/api/download-html", handle_download_html)
+    app.router.add_post("/api/git-push-html", handle_git_push_html)
     # Night Scheduler
     app.router.add_get("/api/scheduler/status", handle_scheduler_status)
     app.router.add_post("/api/scheduler/start", handle_scheduler_start)
