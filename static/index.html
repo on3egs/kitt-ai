@@ -327,6 +327,7 @@ body > * { position: relative; z-index: 1; }
   border-right: 2px solid rgba(50, 140, 50, 0.6);
   border-radius: 6px 0 0 6px;
   color: #7dcc7d;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.42), 2px 0 10px rgba(30,110,30,0.14);
 }
 .message.user::before {
   content: '[ YOU ]';
@@ -339,11 +340,31 @@ body > * { position: relative; z-index: 1; }
   border-left: 2px solid rgba(220, 40, 0, 0.65);
   border-radius: 0 6px 6px 0;
   color: #ff9a9a;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.42), -2px 0 10px rgba(160,20,0,0.14);
 }
 .message.kitt::before {
   content: '[ KITT ]';
   color: #dd3311;
   text-shadow: 0 0 8px #ff000088;
+}
+@keyframes kittScan {
+  from { transform: translateX(-100%); opacity: 1; }
+  to   { transform: translateX(450%);  opacity: 0; }
+}
+@-webkit-keyframes kittScan {
+  from { -webkit-transform: translateX(-100%); opacity: 1; }
+  to   { -webkit-transform: translateX(450%);  opacity: 0; }
+}
+.message.kitt::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 28%;
+  background: linear-gradient(90deg, transparent 0%, rgba(220,40,0,0.22) 50%, transparent 100%);
+  animation: kittScan 0.65s ease-out 0.28s both;
+  -webkit-animation: kittScan 0.65s ease-out 0.28s both;
+  pointer-events: none;
 }
 .message .timing {
   font-size: 0.6em;
@@ -864,16 +885,16 @@ body > * { position: relative; z-index: 1; }
 
 /* ── Apparition messages ── */
 .message {
-  animation: msg-appear 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-  -webkit-animation: msg-appear 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: msg-appear 0.42s cubic-bezier(0.34,1.56,0.64,1) both;
+  -webkit-animation: msg-appear 0.42s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 @keyframes msg-appear {
-  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @-webkit-keyframes msg-appear {
-  from { opacity: 0; transform: translateY(10px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; -webkit-transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; -webkit-transform: translateY(0) scale(1); }
 }
 
 /* ── Feedback tactile boutons ── */
@@ -1214,12 +1235,12 @@ body > * { position: relative; z-index: 1; }
 body.enhanced .message.kitt {
   background: rgba(140,0,0,0.12);
   border-left-color: rgba(255,50,0,0.65);
-  box-shadow: -2px 0 12px rgba(255,0,0,0.08);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.42), -2px 0 14px rgba(255,0,0,0.12);
 }
 body.enhanced .message.user {
   background: rgba(0,100,0,0.10);
   border-right-color: rgba(50,180,50,0.55);
-  box-shadow: 2px 0 10px rgba(0,255,0,0.06);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.42), 2px 0 12px rgba(0,255,0,0.10);
 }
 body.enhanced .input-area input:focus {
   box-shadow: 0 2px 20px #ff000033, inset 0 0 16px #ff000010, 0 0 35px #ff000011;
