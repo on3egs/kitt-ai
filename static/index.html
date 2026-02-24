@@ -278,32 +278,32 @@ body > * { position: relative; z-index: 1; }
   font-size: 0.88em;
   line-height: 1.5;
   position: relative;
-  animation: msgAppear 0.35s cubic-bezier(0.25,0.46,0.45,0.94) both;
-  -webkit-animation: msgAppear 0.35s cubic-bezier(0.25,0.46,0.45,0.94) both;
+  animation: msgAppear 0.42s cubic-bezier(0.34,1.56,0.64,1) both;
+  -webkit-animation: msgAppear 0.42s cubic-bezier(0.34,1.56,0.64,1) both;
 }
 @keyframes msgAppear {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes msgAppearLeft {
-  from { opacity: 0; transform: translate(-18px, 5px); }
-  to   { opacity: 1; transform: translate(0, 0); }
+  from { opacity: 0; transform: translate(-14px, 4px) scale(0.96); }
+  to   { opacity: 1; transform: translate(0, 0) scale(1); }
 }
 @keyframes msgAppearRight {
-  from { opacity: 0; transform: translate(18px, 5px); }
-  to   { opacity: 1; transform: translate(0, 0); }
+  from { opacity: 0; transform: translate(14px, 4px) scale(0.96); }
+  to   { opacity: 1; transform: translate(0, 0) scale(1); }
 }
 @-webkit-keyframes msgAppear {
-  from { opacity: 0; -webkit-transform: translateY(8px); }
-  to   { opacity: 1; -webkit-transform: translateY(0); }
+  from { opacity: 0; -webkit-transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; -webkit-transform: translateY(0) scale(1); }
 }
 @-webkit-keyframes msgAppearLeft {
-  from { opacity: 0; -webkit-transform: translate(-18px, 5px); }
-  to   { opacity: 1; -webkit-transform: translate(0, 0); }
+  from { opacity: 0; -webkit-transform: translate(-14px, 4px) scale(0.96); }
+  to   { opacity: 1; -webkit-transform: translate(0, 0) scale(1); }
 }
 @-webkit-keyframes msgAppearRight {
-  from { opacity: 0; -webkit-transform: translate(18px, 5px); }
-  to   { opacity: 1; -webkit-transform: translate(0, 0); }
+  from { opacity: 0; -webkit-transform: translate(14px, 4px) scale(0.96); }
+  to   { opacity: 1; -webkit-transform: translate(0, 0) scale(1); }
 }
 .message.kitt, .message.proactive {
   animation-name: msgAppearLeft;
@@ -404,8 +404,16 @@ body > * { position: relative; z-index: 1; }
 .input-area input:focus {
   border-color: #880000;
   border-bottom-color: #ff2200;
-  box-shadow: 0 2px 12px #ff000022, inset 0 0 10px #ff000008;
   color: #ffbbbb;
+  animation: kitt-input-focus 2s ease-in-out infinite;
+}
+@keyframes kitt-input-focus {
+  0%, 100% { box-shadow: 0 2px 12px #ff000022, inset 0 0 10px #ff000008; border-bottom-color: #ff2200; }
+  50%       { box-shadow: 0 2px 28px #ff000066, inset 0 0 20px #ff000020; border-bottom-color: #ff5500; }
+}
+@-webkit-keyframes kitt-input-focus {
+  0%, 100% { box-shadow: 0 2px 12px #ff000022, inset 0 0 10px #ff000008; border-bottom-color: #ff2200; }
+  50%       { box-shadow: 0 2px 28px #ff000066, inset 0 0 20px #ff000020; border-bottom-color: #ff5500; }
 }
 .input-area button#send {
   background: linear-gradient(180deg, #cc0000, #880000);
