@@ -38,5 +38,4 @@ static/backups_night/
 # Claude Code
 .claude/
 
-# PDFs générés (lourds)
-*.pdf
+# PDFs générés — inclus volontairement
