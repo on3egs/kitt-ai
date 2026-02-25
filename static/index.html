@@ -959,6 +959,45 @@ body.kb-open { padding-bottom: 222px; }
 }
 .mb-shake { animation: shake-secret 0.35s ease; }
 
+@media (max-width: 480px) {
+  .name-box {
+    padding: 18px 16px 16px;
+  }
+  .name-box h2 {
+    font-size: 1.05em;
+    letter-spacing: 3px;
+  }
+  .name-box .mb-system {
+    font-size: 0.48em;
+    letter-spacing: 2px;
+  }
+  .name-box .mb-sub {
+    font-size: 0.52em;
+    letter-spacing: 1.5px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+  .name-box .mb-prompt {
+    font-size: 0.55em;
+    margin-bottom: 10px;
+  }
+  .name-box input {
+    margin-bottom: 10px;
+    padding: 8px 10px;
+  }
+  .lang-selector {
+    margin: 12px 0 14px;
+  }
+  .name-box .mb-btn {
+    padding: 10px 20px;
+    font-size: 0.72em;
+    letter-spacing: 2px;
+  }
+  .mb-secret-toggle {
+    margin-top: 10px;
+  }
+}
+
 /* Status */
 .status-bar {
   display: none;
@@ -6004,24 +6043,30 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
 /* ── Module clavier KITT virtuel (mobile tactile uniquement) ──────────────── */
 const _kittKb = (() => {
   'use strict';
-  let el, shifted = false, nums = false;
+  let el, shifted = false, nums = false, accs = false;
 
   const AL = [
-    ['q','w','e','r','t','y','u','i','o','p'],
-    ['a','s','d','f','g','h','j','k','l'],
-    ['SH','z','x','c','v','b','n','m','BS'],
-    ['SY','SPACE','SEND']
+    ['a','z','e','r','t','y','u','i','o','p'],
+    ['q','s','d','f','g','h','j','k','l','m'],
+    ['SH','w','x','c','v','b','n','BS'],
+    ['MODE','SPACE','SEND']
+  ];
+  const AC = [
+    ['\u00e9','\u00e8','\u00ea','\u00eb','\u00e0','\u00e2','\u00e4','\u00f9','\u00fb'],
+    ['\u00ee','\u00ef','\u00f4','\u00f6','\u00e7','\u0153','\u00e6','-','_'],
+    ['!','?','.',',',';',':','\'','BS'],
+    ['MODE','SPACE','SEND']
   ];
   const NM = [
     ['1','2','3','4','5','6','7','8','9','0'],
     ['-','/',':', ';','(',')', '@','#','?','!'],
     ['.',',','\'','"','&','*','+','=','BS'],
-    ['AB','SPACE','SEND']
+    ['MODE','SPACE','SEND']
   ];
 
   function render() {
     if (!el) return;
-    const rows = nums ? NM : AL;
+    const rows = accs ? AC : (nums ? NM : AL);
     el.innerHTML = '<div class="kb-header">[ K.I.T.T. NEURAL INPUT ]</div>'
       + rows.map(function(row) {
         return '<div class="kb-row">' + row.map(keyHtml).join('') + '</div>';
@@ -6040,16 +6085,19 @@ const _kittKb = (() => {
     if (k === 'SH')    return shifted ? '&#8682;' : '&#8679;';
     if (k === 'SPACE') return '&#9135;&#9135;&#9135;';
     if (k === 'SEND')  return '&#9654;&nbsp;SEND';
-    if (k === 'SY')    return '!@#';
-    if (k === 'AB')    return 'ABC';
-    return (shifted && !nums) ? k.toUpperCase() : k;
+    if (k === 'MODE') {
+      if (!nums && !accs) return '\u00e9\u00e0\u00e7';
+      if (accs)           return '123';
+      return 'ABC';
+    }
+    return (shifted && !nums && !accs) ? k.toUpperCase() : k;
   }
 
   function kCls(k) {
     if (k === 'SEND')  return 'kb-send kb-w2';
     if (k === 'SPACE') return 'kb-w4';
     if (k === 'SH')    return 'kb-w15' + (shifted ? ' kb-shift-on' : '');
-    if (k === 'BS' || k === 'SY' || k === 'AB') return 'kb-w15';
+    if (k === 'BS' || k === 'MODE') return 'kb-w15';
     return '';
   }
 
@@ -6060,10 +6108,14 @@ const _kittKb = (() => {
     if      (k === 'BS')    { inp.value = inp.value.slice(0, -1); }
     else if (k === 'SEND')  { inp.focus(); if (typeof sendMessage === 'function') sendMessage(); return; }
     else if (k === 'SH')    { shifted = !shifted; render(); return; }
-    else if (k === 'SY')    { nums = true;  render(); return; }
-    else if (k === 'AB')    { nums = false; render(); return; }
+    else if (k === 'MODE') {
+      if (!nums && !accs) { accs = true; }
+      else if (accs) { accs = false; nums = true; }
+      else { nums = false; }
+      render(); return;
+    }
     else if (k === 'SPACE') { inp.value += ' '; }
-    else { inp.value += (shifted && !nums) ? k.toUpperCase() : k; if (shifted) { shifted = false; render(); return; } }
+    else { inp.value += (shifted && !nums && !accs) ? k.toUpperCase() : k; if (shifted) { shifted = false; render(); return; } }
     inp.dispatchEvent(new Event('input'));
   }
 
