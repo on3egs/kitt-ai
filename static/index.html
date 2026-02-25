@@ -1305,6 +1305,73 @@ body.kb-open { padding-bottom: 222px; }
 }
 .run-btn:hover { color: #ffaa44; border-color: #cc6600; box-shadow: 0 0 8px #ffaa4433; }
 .run-btn.running { color: #ff8800; border-color: #ff6600; animation: enhance-pulse 1s ease-in-out infinite; }
+.conv-btn {
+  position: relative; transform: none;
+  background: transparent; border: 1px solid #115544; color: #227766;
+  font-size: 0.48em; font-family: inherit; font-weight: bold;
+  letter-spacing: 1.5px; padding: 3px 7px;
+  cursor: pointer; border-radius: 2px;
+  transition: all 0.3s; -webkit-tap-highlight-color: transparent;
+}
+.conv-btn:hover { color: #44aa88; border-color: #227766; box-shadow: 0 0 8px #44aa8833; }
+.conv-btn.active { color: #66ffcc; border-color: #44bbaa; box-shadow: 0 0 10px #44ffcc44; }
+
+/* ── Modals Conversations ── */
+.conv-modal {
+  display: none; position: fixed; z-index: 9000;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.85); align-items: center; justify-content: center;
+}
+.conv-modal.open { display: flex; }
+.conv-box {
+  background: #060c0a; border: 1px solid #227766; border-radius: 4px;
+  padding: 28px 32px; min-width: 280px; max-width: 480px; width: 90%;
+  color: #88ccaa; font-family: inherit; position: relative;
+}
+.conv-box h3 { color: #44bb88; font-size: 0.9em; letter-spacing: 2px; margin: 0 0 18px 0; text-transform: uppercase; }
+.conv-box input[type=text], .conv-box input[type=password] {
+  width: 100%; box-sizing: border-box;
+  background: #020804; border: 1px solid #227766; color: #aaeedd;
+  font-family: inherit; font-size: 0.9em; padding: 8px 10px; border-radius: 2px;
+  outline: none; margin-bottom: 14px;
+}
+.conv-box input:focus { border-color: #44aa88; box-shadow: 0 0 8px #44aa8822; }
+.conv-btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+.conv-act-btn {
+  background: transparent; border: 1px solid #227766; color: #44aa88;
+  font-family: inherit; font-size: 0.8em; letter-spacing: 1.5px; padding: 5px 14px;
+  cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.conv-act-btn:hover { color: #66ffcc; border-color: #44bb88; box-shadow: 0 0 8px #44ffcc33; }
+.conv-act-btn.cancel { border-color: #442222; color: #884444; }
+.conv-act-btn.cancel:hover { color: #ff4444; border-color: #882222; }
+.conv-close-btn {
+  position: absolute; top: 10px; right: 14px;
+  background: none; border: none; color: #557755; font-size: 1.1em; cursor: pointer; padding: 0;
+}
+.conv-close-btn:hover { color: #44ffcc; }
+.conv-err { color: #ff4444; font-size: 0.78em; margin-top: -8px; margin-bottom: 8px; display: none; }
+.conv-list-area { max-height: 340px; overflow-y: auto; margin-top: 8px; }
+.conv-user-group { margin-bottom: 14px; }
+.conv-user-name { color: #44bb88; font-size: 0.8em; letter-spacing: 1px; margin-bottom: 4px; }
+.conv-file-item {
+  padding: 4px 8px; font-size: 0.75em; color: #557766; cursor: pointer;
+  border-left: 2px solid #1a4433; margin-bottom: 2px; transition: all 0.2s;
+}
+.conv-file-item:hover { color: #44ffcc; border-color: #44bb88; background: #0a1a14; }
+.conv-reader { display: none; }
+.conv-reader.open { display: block; }
+.conv-reader-content {
+  background: #020804; border: 1px solid #1a4433; padding: 10px; border-radius: 2px;
+  font-size: 0.72em; color: #88aa99; white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+  margin-bottom: 10px; line-height: 1.5;
+}
+.conv-back-btn {
+  background: none; border: 1px solid #227766; color: #44aa88; font-family: inherit;
+  font-size: 0.75em; padding: 4px 12px; cursor: pointer; border-radius: 2px;
+}
+.conv-back-btn:hover { color: #66ffcc; border-color: #44bb88; }
+.conv-empty { color: #445544; font-size: 0.8em; text-align: center; padding: 20px 0; }
 
 /* === MODE AMELIORATION AUTO === */
 body.enhanced .message.kitt {
@@ -2063,6 +2130,7 @@ body.enhanced .message {
     <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
     <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
     <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
+    <button class="conv-btn" id="convbtn" onclick="openConvAdmin()" aria-label="Archives conversations" title="Archives des conversations KITT">CONV</button>
     <button class="dl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
     <button class="git-btn" id="gitbtn" onclick="_requireNightAuth(gitPushHtml)" title="Pousser index.html vers GitHub">GIT</button>
     <button class="run-btn" id="runbtn" onclick="_requireNightAuth(runImprove)" title="Lancer une amélioration autonome maintenant">RUN</button>
@@ -3412,6 +3480,22 @@ document.addEventListener('keydown', e => {
 
 async function resetChat() {
   if (!confirm('Effacer l\'historique KITT ?')) return;
+  // Sauvegarder la conversation avant de vider
+  const msgEls = chat.querySelectorAll('.message:not(.proactive)');
+  if (msgEls.length > 0) {
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    const ts  = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const msgs = [];
+    msgEls.forEach(el => {
+      const isKitt = el.classList.contains('kitt');
+      const timingEl = el.querySelector('.timing');
+      let text = el.innerText || '';
+      if (timingEl) text = text.replace(timingEl.innerText, '').trim();
+      if (text) msgs.push({ role: isKitt ? 'assistant' : 'user', text, time: ts });
+    });
+    if (msgs.length > 0 && typeof _convSave === 'function') _convSave(msgs);
+  }
   try {
     await fetch('/api/reset', { method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -4495,6 +4579,48 @@ connectProactive();
     <div style="color:#555;font-size:0.75em;margin-top:10px">Technologies : NVIDIA &middot; Jetson Orin Nano &middot; Qwen 2.5</div>
     <div class="about-license">Elastic License 2.0 (ELv2)<br>Tous droits commerciaux r&eacute;serv&eacute;s</div>
     <div class="about-close">Touchez pour fermer</div>
+  </div>
+</div>
+
+<!-- ── Modal: premier accès (saisie prénom) ── -->
+<div class="conv-modal" id="conv-name-modal">
+  <div class="conv-box">
+    <h3>Identification KITT</h3>
+    <p style="font-size:0.8em;color:#557766;margin:0 0 14px 0">Quel est votre prénom ?</p>
+    <input type="text" id="conv-name-input" placeholder="Prénom..." maxlength="32"
+           onkeydown="if(event.key==='Enter')_convRegister()">
+    <div class="conv-btn-row">
+      <button class="conv-act-btn" onclick="_convRegister()">CONFIRMER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: mot de passe admin ── -->
+<div class="conv-modal" id="conv-auth-modal">
+  <div class="conv-box">
+    <h3>Acces Archives</h3>
+    <input type="password" id="conv-auth-input" placeholder="Mot de passe admin..."
+           onkeydown="if(event.key==='Enter')_convDoAuth()">
+    <div id="conv-auth-err" class="conv-err">Mot de passe incorrect</div>
+    <div class="conv-btn-row">
+      <button class="conv-act-btn cancel" onclick="document.getElementById('conv-auth-modal').classList.remove('open')">ANNULER</button>
+      <button class="conv-act-btn" onclick="_convDoAuth()">VALIDER</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: liste archives (admin) ── -->
+<div class="conv-modal" id="conv-list-modal">
+  <div class="conv-box" style="max-width:540px">
+    <button class="conv-close-btn" onclick="document.getElementById('conv-list-modal').classList.remove('open')" title="Fermer">x</button>
+    <h3>Archives Conversations</h3>
+    <!-- Liste -->
+    <div id="conv-files-list" class="conv-list-area"></div>
+    <!-- Reader -->
+    <div id="conv-reader" class="conv-reader">
+      <div id="conv-reader-content" class="conv-reader-content"></div>
+      <button class="conv-back-btn" onclick="_convCloseReader()">RETOUR</button>
+    </div>
   </div>
 </div>
 
@@ -5856,6 +5982,188 @@ const _kittKb = (() => {
 
   return { show, hide };
 })();
+</script>
+
+<script>
+// ── Système Conversations KYRONEX ─────────────────────────────────────────
+let _convUid = null, _convName = null, _convAdminToken = null;
+const _CONV_UUID_KEY = 'kyronex_conv_uuid';
+
+async function _convInit() {
+  let stored = localStorage.getItem(_CONV_UUID_KEY);
+  if (!stored) {
+    stored = 'uuid-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+    localStorage.setItem(_CONV_UUID_KEY, stored);
+  }
+  try {
+    const res = await fetch('/api/conv/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uuid: stored })
+    });
+    const data = await res.json();
+    _convUid = data.id;
+    if (!data.is_new) {
+      _convName = data.name;
+    } else {
+      // Premier accès : demander le prénom
+      const modal = document.getElementById('conv-name-modal');
+      if (modal) {
+        modal.classList.add('open');
+        const inp = document.getElementById('conv-name-input');
+        if (inp) setTimeout(() => inp.focus(), 100);
+      }
+    }
+  } catch(e) {
+    console.warn('[CONV] _convInit error', e);
+  }
+}
+
+async function _convRegister() {
+  const inp = document.getElementById('conv-name-input');
+  const name = inp ? inp.value.trim() : '';
+  if (!name || !_convUid) return;
+  try {
+    const res = await fetch('/api/conv/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: _convUid, name: name })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      _convName = data.name;
+      document.getElementById('conv-name-modal').classList.remove('open');
+    }
+  } catch(e) {
+    console.warn('[CONV] _convRegister error', e);
+  }
+}
+
+function openConvAdmin() {
+  if (_convAdminToken) {
+    _convShowList();
+  } else {
+    const modal = document.getElementById('conv-auth-modal');
+    if (modal) {
+      modal.classList.add('open');
+      const inp = document.getElementById('conv-auth-input');
+      if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 100); }
+      const err = document.getElementById('conv-auth-err');
+      if (err) err.style.display = 'none';
+    }
+  }
+}
+
+async function _convDoAuth() {
+  const inp = document.getElementById('conv-auth-input');
+  const pwd = inp ? inp.value : '';
+  if (!pwd) return;
+  try {
+    const res = await fetch('/api/conv/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pwd })
+    });
+    const data = await res.json();
+    if (data.ok && data.token) {
+      _convAdminToken = data.token;
+      document.getElementById('conv-auth-modal').classList.remove('open');
+      if (inp) inp.value = '';
+      _convShowList();
+    } else {
+      const err = document.getElementById('conv-auth-err');
+      if (err) err.style.display = 'block';
+    }
+  } catch(e) {
+    const err = document.getElementById('conv-auth-err');
+    if (err) { err.textContent = 'Erreur réseau'; err.style.display = 'block'; }
+  }
+}
+
+async function _convShowList() {
+  const modal = document.getElementById('conv-list-modal');
+  const listEl = document.getElementById('conv-files-list');
+  const reader = document.getElementById('conv-reader');
+  if (!modal || !listEl) return;
+  if (reader) reader.classList.remove('open');
+  listEl.style.display = 'block';
+  modal.classList.add('open');
+  listEl.innerHTML = '<div class="conv-empty">Chargement...</div>';
+  try {
+    const res = await fetch('/api/conv/list', {
+      headers: { 'X-Conv-Token': _convAdminToken || '' }
+    });
+    if (res.status === 401) {
+      _convAdminToken = null;
+      modal.classList.remove('open');
+      openConvAdmin();
+      return;
+    }
+    const data = await res.json();
+    if (!data.users || data.users.length === 0) {
+      listEl.innerHTML = '<div class="conv-empty">Aucune conversation archivee</div>';
+      return;
+    }
+    let html = '';
+    for (const u of data.users) {
+      html += `<div class="conv-user-group">
+        <div class="conv-user-name">${u.user} (${u.count} conv.)</div>`;
+      if (u.files && u.files.length > 0) {
+        for (const f of u.files) {
+          html += `<div class="conv-file-item" onclick="_convReadFile('${u.safe}','${f}')">${f}</div>`;
+        }
+      } else {
+        html += '<div style="font-size:0.72em;color:#334433;padding:2px 8px">Aucun fichier</div>';
+      }
+      html += '</div>';
+    }
+    listEl.innerHTML = html;
+  } catch(e) {
+    listEl.innerHTML = '<div class="conv-empty">Erreur de chargement</div>';
+  }
+}
+
+async function _convReadFile(safe, filename) {
+  const listEl = document.getElementById('conv-files-list');
+  const reader  = document.getElementById('conv-reader');
+  const content = document.getElementById('conv-reader-content');
+  if (!reader || !content) return;
+  try {
+    const res = await fetch(`/api/conv/read/${encodeURIComponent(safe)}/${encodeURIComponent(filename)}`, {
+      headers: { 'X-Conv-Token': _convAdminToken || '' }
+    });
+    const data = await res.json();
+    content.textContent = data.content || '(vide)';
+    if (listEl) listEl.style.display = 'none';
+    reader.classList.add('open');
+  } catch(e) {
+    content.textContent = 'Erreur de lecture.';
+    reader.classList.add('open');
+  }
+}
+
+function _convCloseReader() {
+  const listEl = document.getElementById('conv-files-list');
+  const reader  = document.getElementById('conv-reader');
+  if (reader) reader.classList.remove('open');
+  if (listEl) listEl.style.display = 'block';
+}
+
+async function _convSave(msgs) {
+  if (!_convUid || !msgs || msgs.length === 0) return;
+  try {
+    await fetch('/api/conv/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: _convUid, messages: msgs })
+    });
+  } catch(e) {
+    console.warn('[CONV] _convSave error', e);
+  }
+}
+
+// Initialiser au chargement
+document.addEventListener('DOMContentLoaded', _convInit);
 </script>
 </body>
 </html>

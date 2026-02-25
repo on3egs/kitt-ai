@@ -267,6 +267,42 @@ VISION_SCRIPT = BASE_DIR / "vision.py"
 # ── Mémoire persistante ──────────────────────────────────────────────────
 MEMORY_FILE = BASE_DIR / "memory.json"
 
+# ── Système Conversations ─────────────────────────────────────────────────
+CONV_DATA_DIR    = BASE_DIR / 'conv_data'
+CONV_USERS_FILE  = CONV_DATA_DIR / 'conv_users.json'
+CONV_CONFIG_FILE = CONV_DATA_DIR / 'conv_config.json'
+CONV_STORE_DIR   = CONV_DATA_DIR / 'conversations'
+CONV_DATA_DIR.mkdir(exist_ok=True)
+CONV_STORE_DIR.mkdir(exist_ok=True)
+_conv_admin_sessions: dict = {}   # token → expiry timestamp
+_CONV_ADMIN_HASH = hashlib.sha256(b"Microsoft198@").hexdigest()
+
+
+def _conv_load_users() -> dict:
+    try:
+        return json.loads(CONV_USERS_FILE.read_text()) if CONV_USERS_FILE.exists() else {}
+    except Exception:
+        return {}
+
+
+def _conv_save_users(u: dict):
+    CONV_USERS_FILE.write_text(json.dumps(u, indent=2, ensure_ascii=False))
+
+
+def _conv_safe(name: str) -> str:
+    """Transforme un nom en chemin sûr (alphanum + _ -)."""
+    return re.sub(r'[^a-zA-Z0-9_\-]', '_', name)
+
+
+def _conv_check_token(request) -> bool:
+    """Vérifie le token admin X-Conv-Token dans les headers."""
+    t = request.headers.get('X-Conv-Token', '')
+    if t in _conv_admin_sessions:
+        if time.time() < _conv_admin_sessions[t]:
+            return True
+        del _conv_admin_sessions[t]
+    return False
+
 def _load_memory() -> dict:
     if MEMORY_FILE.exists():
         try:
@@ -2193,6 +2229,128 @@ async def cleanup_audio(app):
                 f.unlink(missing_ok=True)
 
 
+# ── Handlers Conversations ────────────────────────────────────────────────
+
+async def handle_conv_identify(request):
+    """POST /api/conv/identify — Identifie un utilisateur par MAC ou UUID."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    c_uuid = body.get('uuid') or str(uuid.uuid4())
+    ip = request.remote
+    mac = None if ip in ('127.0.0.1', '::1') else resolve_mac(ip)
+    uid = mac if mac else c_uuid
+    users = _conv_load_users()
+    if uid in users:
+        return web.json_response({"id": uid, "name": users[uid]['name'], "is_new": False})
+    return web.json_response({"id": uid, "is_new": True})
+
+
+async def handle_conv_register(request):
+    """POST /api/conv/register — Enregistre un nouvel utilisateur."""
+    try:
+        b = await request.json()
+    except Exception:
+        return web.json_response({"error": "JSON invalide"}, status=400)
+    uid  = b.get('id', '').strip()
+    name = b.get('name', '').strip()
+    if not uid or not name:
+        return web.json_response({"error": "id+name requis"}, status=400)
+    users = _conv_load_users()
+    users[uid] = {
+        "name": name,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "conv_count": 0,
+    }
+    _conv_save_users(users)
+    (CONV_STORE_DIR / _conv_safe(name)).mkdir(exist_ok=True)
+    print(f"[CONV] Nouvel utilisateur enregistré : {name} ({uid[:16]})")
+    return web.json_response({"ok": True, "name": name})
+
+
+async def handle_conv_save(request):
+    """POST /api/conv/save — Sauvegarde les messages d'une conversation."""
+    try:
+        b = await request.json()
+    except Exception:
+        return web.json_response({"error": "JSON invalide"}, status=400)
+    uid  = b.get('id', '').strip()
+    msgs = b.get('messages', [])
+    if not uid or not msgs:
+        return web.json_response({"error": "id+messages requis"}, status=400)
+    users = _conv_load_users()
+    if uid not in users:
+        return web.json_response({"error": "utilisateur inconnu"}, status=404)
+    name = users[uid]['name']
+    safe = _conv_safe(name)
+    user_dir = CONV_STORE_DIR / safe
+    user_dir.mkdir(exist_ok=True)
+    ts   = datetime.now().strftime('%Y-%m-%d_%H-%M')
+    fname = f"conv_{ts}.txt"
+    lines = [f"Conversation KITT — {name} — {ts}\n{'='*50}\n"]
+    for m in msgs:
+        role = m.get('role', 'user')
+        text = m.get('text', '').strip()
+        t    = m.get('time', '')
+        prefix = 'KITT' if role == 'assistant' else name.upper()
+        lines.append(f"[{t}] {prefix}: {text}\n")
+    (user_dir / fname).write_text(''.join(lines), encoding='utf-8')
+    users[uid]['conv_count'] = users[uid].get('conv_count', 0) + 1
+    _conv_save_users(users)
+    print(f"[CONV] Conversation sauvée : {name}/{fname} ({len(msgs)} messages)")
+    return web.json_response({"ok": True, "file": fname})
+
+
+async def handle_conv_auth(request):
+    """POST /api/conv/auth — Authentification admin."""
+    try:
+        b = await request.json()
+    except Exception:
+        return web.json_response({"error": "JSON invalide"}, status=400)
+    pwd = b.get('password', '')
+    h   = hashlib.sha256(pwd.encode()).hexdigest()
+    if h != _CONV_ADMIN_HASH:
+        return web.json_response({"error": "Mot de passe incorrect"}, status=401)
+    token = str(uuid.uuid4())
+    _conv_admin_sessions[token] = time.time() + 3600  # expire dans 1h
+    return web.json_response({"ok": True, "token": token})
+
+
+async def handle_conv_list(request):
+    """GET /api/conv/list — Liste toutes les conversations (protégé admin)."""
+    if not _conv_check_token(request):
+        return web.json_response({"error": "Non autorisé"}, status=401)
+    result = []
+    users = _conv_load_users()
+    uid_by_safe = {_conv_safe(v['name']): k for k, v in users.items()}
+    for user_dir in sorted(CONV_STORE_DIR.iterdir()):
+        if not user_dir.is_dir():
+            continue
+        safe = user_dir.name
+        uid  = uid_by_safe.get(safe, '')
+        name = users.get(uid, {}).get('name', safe) if uid else safe
+        files = sorted([f.name for f in user_dir.glob('conv_*.txt')], reverse=True)
+        result.append({"user": name, "safe": safe, "count": len(files), "files": files})
+    return web.json_response({"users": result})
+
+
+async def handle_conv_read(request):
+    """GET /api/conv/read/{user}/{filename} — Lit un fichier conversation (protégé admin)."""
+    if not _conv_check_token(request):
+        return web.json_response({"error": "Non autorisé"}, status=401)
+    safe_user = request.match_info.get('user', '')
+    filename  = request.match_info.get('filename', '')
+    # Anti path-traversal
+    if '..' in safe_user or '..' in filename or '/' in safe_user or '/' in filename:
+        return web.json_response({"error": "Chemin invalide"}, status=400)
+    fpath = CONV_STORE_DIR / safe_user / filename
+    if not fpath.exists() or not fpath.is_file():
+        return web.json_response({"error": "Fichier introuvable"}, status=404)
+    content = fpath.read_text(encoding='utf-8')
+    return web.json_response({"content": content})
+
+
 # ── App ──────────────────────────────────────────────────────────────────
 def create_app() -> web.Application:
     middlewares = []
@@ -2236,6 +2394,13 @@ def create_app() -> web.Application:
     app.router.add_get("/api/scheduler/logs", handle_scheduler_logs)
     app.router.add_get("/api/pdfs", handle_list_pdfs)
     app.router.add_get("/api/download/{filename}", handle_download)
+    # Conversations
+    app.router.add_post("/api/conv/identify", handle_conv_identify)
+    app.router.add_post("/api/conv/register", handle_conv_register)
+    app.router.add_post("/api/conv/save",     handle_conv_save)
+    app.router.add_post("/api/conv/auth",     handle_conv_auth)
+    app.router.add_get( "/api/conv/list",     handle_conv_list)
+    app.router.add_get( "/api/conv/read/{user}/{filename}", handle_conv_read)
     app.router.add_static("/audio", AUDIO_DIR)
     app.router.add_static("/static", STATIC_DIR)
 
