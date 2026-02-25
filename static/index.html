@@ -1875,6 +1875,7 @@ body.enhanced .message {
   z-index: 0;
   pointer-events: none;
   transform: translate3d(0,0,0);
+  background: #000;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -3382,17 +3383,14 @@ function unlockUI(name, lang) {
   input.focus();
   _loadChatHistory();
   _applyUILang(_preferredLang);
-  // Message d'accueil avec le prénom
-  const greetings = {
-    fr: `Bonjour ${name}. Je suis KITT. Comment puis-je vous assister ?`,
-    en: `Hello ${name}. I am KITT. How may I assist you?`,
-    de: `Hallo ${name}. Ich bin KITT. Wie kann ich Ihnen helfen?`,
-    it: `Salve ${name}. Sono KITT. Come posso assisterla?`,
-    pt: `Ola ${name}. Sou KITT. Como posso ajuda-lo?`,
-    es: `Hola ${name}. Soy KITT. Como puedo asistirle?`,
-    nl: `Hallo ${name}. Ik ben KITT. Hoe kan ik u helpen?`,
+  // Salutation KITT avec vraie voix (TTS) — streamChat sans message user visible
+  const _greetTriggers = {
+    fr: 'Bonjour', en: 'Hello', de: 'Hallo',
+    it: 'Ciao',   pt: 'Ola',   es: 'Hola', nl: 'Hallo'
   };
-  addMessage(greetings[_preferredLang] || greetings.fr, 'kitt');
+  setTimeout(function () {
+    streamChat(_greetTriggers[_preferredLang] || 'Bonjour');
+  }, 900);
 }
 
 async function initUserIdentity() {
@@ -5802,16 +5800,16 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
         72, null);
     }, 13800);
 
-    // 19.2s — texte poétique disparaît
-    _t(function () { TL.style.opacity = '0'; }, 19200);
+    // 21.5s — texte poétique disparaît (laisse le temps de finir ~97 chars × 72ms = 7s depuis 13.8s)
+    _t(function () { TL.style.opacity = '0'; }, 21500);
 
-    // 20.0s — KYRONEX s'étend + stab cuivres
+    // 22.3s — KYRONEX s'étend + stab cuivres
     _t(function () {
       _brass(164.8, 0.20);
       TT.classList.add('show');
-    }, 20000);
+    }, 22300);
 
-    // 22.0s — scanline verticale
+    // 24.2s — scanline verticale
     _t(function () {
       if (!SL) return;
       SL.style.animation = 'none';
@@ -5824,29 +5822,29 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
           SL.style.webkitAnimation = 'intro-scan-v 1.2s ease-in-out forwards';
         });
       });
-    }, 22000);
+    }, 24200);
 
-    // 22.8s — SYSTEM INTELLIGENCE
-    _t(function () { _brass(196.0, 0.11); SB.style.opacity = '1'; }, 22800);
+    // 25.0s — SYSTEM INTELLIGENCE
+    _t(function () { _brass(196.0, 0.11); SB.style.opacity = '1'; }, 25000);
 
-    // 24.2s — by MANIX
-    _t(function () { _brass(164.8, 0.09); BY.style.opacity = '1'; }, 24200);
+    // 26.4s — by MANIX
+    _t(function () { _brass(164.8, 0.09); BY.style.opacity = '1'; }, 26400);
 
-    // 25.6s — PRÉSENTE
-    _t(function () { _brass(130.8, 0.08); PR.style.opacity = '1'; }, 25600);
+    // 27.8s — PRÉSENTE
+    _t(function () { _brass(130.8, 0.08); PR.style.opacity = '1'; }, 27800);
 
-    // 27.0s — [ KNIGHT INDUSTRIES TWO THOUSAND ] glitch + gros stab
+    // 29.2s — [ KNIGHT INDUSTRIES TWO THOUSAND ] glitch + gros stab
     _t(function () {
       _brass(130.8, 0.30);
       FN.classList.add('glitch');
       FN.style.opacity = '1';
-    }, 27000);
+    }, 29200);
 
-    // 28.8s — glow intense sur KYRONEX
-    _t(function () { if (TT) TT.classList.add('glow'); }, 28800);
+    // 31.0s — glow intense sur KYRONEX
+    _t(function () { if (TT) TT.classList.add('glow'); }, 31000);
 
-    // 31.5s — fin (morphing dissolve 3s vers interface KITT)
-    _t(function () { _end(); }, 31500);
+    // 33.5s — fin (morphing dissolve 3s vers interface KITT)
+    _t(function () { _end(); }, 33500);
   }
 
   document.addEventListener('DOMContentLoaded', _run);
