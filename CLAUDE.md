@@ -49,6 +49,7 @@ Serveur : `kyronex_server.py` — HTTPS port 3000 — aiohttp + Whisper + Piper 
 - **Boutons 48px mobile** : `@media (max-width: 480px)` ✅
 - **Badge stats mobile** : `#mobileStats`, `#ms-online`, `#ms-health` ✅
 - **Orbe mobile** : `N = window.innerWidth <= 600 ? 80 : 130` ✅
+- **Bouton AUTO (Amélioration Auto)** : `toggleEnhance()`, `#enhancebtn`, thème violet `#aa44ff`, `body.enhanced`, 7 langues `enhance_active` ✅
 
 ### Fonctionnalités serveur existantes (kyronex_server.py)
 - **5 émotions vocales** : `detect_emotion()` → sox profiles ✅
@@ -259,4 +260,4 @@ LD_LIBRARY_PATH=/home/kitt/CTranslate2/install/lib \
 
 ## JOURNAL DES SESSIONS
 
-Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260224_043351, itération 4/10 en cours, fichier 120K/3586 lignes
+Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260225_011914, itération 1/1 en cours, fichier 172K/4869 lignes

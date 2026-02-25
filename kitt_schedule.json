@@ -17,7 +17,7 @@
         6,
         0
       ],
-      "enabled": false
+      "enabled": true
     },
     {
       "id": "93e2a062",
@@ -39,6 +39,27 @@
       "enabled": true,
       "target": "site",
       "script": "/home/kitt/kitt-ai/kitt_site_improve.sh"
+    },
+    {
+      "id": "7f8c906b",
+      "name": "Nuit auto",
+      "start_h": 21,
+      "start_m": 0,
+      "end_h": 24,
+      "end_m": 0,
+      "iterations": 20,
+      "days": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        0
+      ],
+      "enabled": true,
+      "target": "interface",
+      "script": "/home/kitt/kitt-ai/kitt_night_improve.sh"
     }
   ]
 }

@@ -27,6 +27,7 @@ echo "  ██║  ██╗██║   ██║      ██║       ██║
 echo "  ╚═╝  ╚═╝╚═╝   ╚═╝      ╚═╝       ╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   "
 echo -e "${NC}"
 echo -e "${YELLOW}  Mode: AMÉLIORATIONS AUTONOMES NOCTURNES${NC}"
+echo -e "  Modele        : claude-haiku-4-5-20251001 (economique)"
 echo -e "  Fichier cible : ${TARGET}"
 echo -e "  Itérations    : ${NB_ITER}"
 echo -e "  Log           : ${LOG}"
@@ -113,6 +114,7 @@ for i in $(seq 1 $NB_ITER); do
     # ── Lancer Claude en mode autonome ──
     # Claude lit automatiquement CLAUDE.md (briefing projet) avant d'agir
     claude --dangerously-skip-permissions \
+        --model claude-haiku-4-5-20251001 \
         --print \
         "$TASK" \
         2>&1 | tee -a "$LOG"
