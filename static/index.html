@@ -482,6 +482,89 @@ body > * { position: relative; z-index: 1; }
   0%, 100% { box-shadow: 0 2px 12px #ff000022, inset 0 0 10px #ff000008; border-bottom-color: #ff2200; }
   50%       { box-shadow: 0 2px 28px #ff000066, inset 0 0 20px #ff000020; border-bottom-color: #ff5500; }
 }
+
+/* ── Clavier KITT virtuel (mobile tactile uniquement) ───────── */
+#kitt-kb {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 300;
+  background: #020000;
+  border-top: 2px solid #3a0000;
+  box-shadow: 0 -5px 30px rgba(180,0,0,0.24), 0 -1px 0 #220000;
+  padding: 0 3px max(6px, env(safe-area-inset-bottom)) 3px;
+  transform: translateY(110%);
+  transition: transform 0.24s cubic-bezier(0.22,1,0.36,1);
+  will-change: transform;
+}
+#kitt-kb.kb-on { transform: translateY(0); }
+body.kb-open { padding-bottom: 222px; }
+.kb-header {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 8px;
+  color: #3a0000;
+  letter-spacing: 3px;
+  padding: 5px 0 4px;
+  border-bottom: 1px solid #180000;
+  margin-bottom: 3px;
+}
+.kb-row {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  margin-bottom: 3px;
+}
+.kb-key {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  background: #080000;
+  border: 1px solid #200000;
+  border-bottom: 2px solid #360000;
+  border-radius: 4px;
+  color: #bb3333;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.06s, box-shadow 0.06s, color 0.06s;
+  touch-action: manipulation;
+}
+.kb-key:active {
+  background: #1a0000;
+  border-color: #770000;
+  border-bottom-color: #ee1100;
+  box-shadow: 0 0 10px #aa000044, inset 0 0 8px #220000;
+  color: #ff6644;
+  transform: translateY(1px);
+}
+.kb-w15 { flex: 1.5; font-size: 11px; }
+.kb-w2  { flex: 2;   font-size: 12px; }
+.kb-w4  { flex: 4; }
+.kb-send {
+  flex: 2.2;
+  background: #110000;
+  border-color: #550000;
+  border-bottom-color: #bb2200;
+  color: #ff3333;
+  font-size: 11px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 12px #ff000018;
+}
+.kb-send:active {
+  background: #260000;
+  border-bottom-color: #ff3300;
+  box-shadow: 0 0 20px #ff000055;
+  color: #ff8866;
+}
+.kb-shift-on { background: #130000; border-color: #500000; color: #ff5533; }
+@media (min-width: 769px) { #kitt-kb { display: none !important; } }
 .input-area button#send {
   background: linear-gradient(180deg, #cc0000, #880000);
   color: #fff;
@@ -5911,6 +5994,114 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
   }
 
   document.addEventListener('DOMContentLoaded', _run);
+})();
+</script>
+
+<!-- ── Clavier KITT virtuel ── -->
+<div id="kitt-kb" aria-label="Clavier KITT" aria-hidden="true"></div>
+
+<script>
+/* ── Module clavier KITT virtuel (mobile tactile uniquement) ──────────────── */
+const _kittKb = (() => {
+  'use strict';
+  let el, shifted = false, nums = false;
+
+  const AL = [
+    ['q','w','e','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l'],
+    ['SH','z','x','c','v','b','n','m','BS'],
+    ['SY','SPACE','SEND']
+  ];
+  const NM = [
+    ['1','2','3','4','5','6','7','8','9','0'],
+    ['-','/',':', ';','(',')', '@','#','?','!'],
+    ['.',',','\'','"','&','*','+','=','BS'],
+    ['AB','SPACE','SEND']
+  ];
+
+  function render() {
+    if (!el) return;
+    const rows = nums ? NM : AL;
+    el.innerHTML = '<div class="kb-header">[ K.I.T.T. NEURAL INPUT ]</div>'
+      + rows.map(function(row) {
+        return '<div class="kb-row">' + row.map(keyHtml).join('') + '</div>';
+      }).join('');
+    el.querySelectorAll('.kb-key').forEach(function(b) {
+      b.addEventListener('pointerdown', function(e) { e.preventDefault(); press(b.dataset.k); });
+    });
+  }
+
+  function keyHtml(k) {
+    return '<button class="kb-key ' + kCls(k) + '" data-k="' + k + '" tabindex="-1">' + kLbl(k) + '</button>';
+  }
+
+  function kLbl(k) {
+    if (k === 'BS')    return '&#9003;';
+    if (k === 'SH')    return shifted ? '&#8682;' : '&#8679;';
+    if (k === 'SPACE') return '&#9135;&#9135;&#9135;';
+    if (k === 'SEND')  return '&#9654;&nbsp;SEND';
+    if (k === 'SY')    return '!@#';
+    if (k === 'AB')    return 'ABC';
+    return (shifted && !nums) ? k.toUpperCase() : k;
+  }
+
+  function kCls(k) {
+    if (k === 'SEND')  return 'kb-send kb-w2';
+    if (k === 'SPACE') return 'kb-w4';
+    if (k === 'SH')    return 'kb-w15' + (shifted ? ' kb-shift-on' : '');
+    if (k === 'BS' || k === 'SY' || k === 'AB') return 'kb-w15';
+    return '';
+  }
+
+  function press(k) {
+    if (typeof _kbClick === 'function') _kbClick();
+    const inp = document.getElementById('input');
+    if (!inp) return;
+    if      (k === 'BS')    { inp.value = inp.value.slice(0, -1); }
+    else if (k === 'SEND')  { inp.focus(); if (typeof sendMessage === 'function') sendMessage(); return; }
+    else if (k === 'SH')    { shifted = !shifted; render(); return; }
+    else if (k === 'SY')    { nums = true;  render(); return; }
+    else if (k === 'AB')    { nums = false; render(); return; }
+    else if (k === 'SPACE') { inp.value += ' '; }
+    else { inp.value += (shifted && !nums) ? k.toUpperCase() : k; if (shifted) { shifted = false; render(); return; } }
+    inp.dispatchEvent(new Event('input'));
+  }
+
+  function show() {
+    if (!el) return;
+    const inp = document.getElementById('input');
+    if (inp) inp.setAttribute('inputmode', 'none');
+    document.body.classList.add('kb-open');
+    el.classList.add('kb-on');
+    setTimeout(function() { const c = document.getElementById('chat'); if (c) c.scrollTop = c.scrollHeight; }, 280);
+  }
+
+  function hide() {
+    if (!el) return;
+    el.classList.remove('kb-on');
+    document.body.classList.remove('kb-open');
+    const inp = document.getElementById('input');
+    if (inp) inp.removeAttribute('inputmode');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!('ontouchstart' in window)) return; // Desktop : clavier système
+    el = document.getElementById('kitt-kb');
+    if (!el) return;
+    render();
+    const inp = document.getElementById('input');
+    if (inp) {
+      inp.setAttribute('inputmode', 'none'); // Supprime clavier système sur mobile
+      inp.addEventListener('focus', show);
+    }
+    el.addEventListener('pointerdown', function(e) { e.preventDefault(); });
+    document.addEventListener('pointerdown', function(e) {
+      if (!el.classList.contains('kb-on')) return;
+      if (!el.contains(e.target) && e.target.id !== 'input' && e.target.id !== 'send') hide();
+    });
+  });
+
+  return { show, hide };
 })();
 </script>
 </body>
