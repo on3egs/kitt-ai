@@ -81,8 +81,30 @@ body > * { position: relative; z-index: 1; }
   animation: header-glow 5s ease-in-out infinite;
 }
 @keyframes header-glow {
-  0%,100% { text-shadow: 0 0 25px #ff0000, 0 0 50px #ff000044; }
-  50%      { text-shadow: 0 0 35px #ff2200, 0 0 70px #ff000055; }
+  0%,100% { text-shadow: 0 0 25px #ff0000, 0 0 50px #ff000044; opacity: 1; }
+  46%     { text-shadow: 0 0 42px #ff2200, 0 0 85px #ff000066; opacity: 1; }
+  49%     { text-shadow: 0 0 18px #ff1100, 0 0 35px #ff000033; opacity: 0.82; }
+  51%     { text-shadow: 0 0 40px #ff2200, 0 0 80px #ff000066; opacity: 1; }
+}
+/* Effet power-on moniteur (déclenché fin intro) */
+#poweron {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9998;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+#poweron.flash {
+  animation: poweron-anim 0.7s ease-out forwards;
+}
+@keyframes poweron-anim {
+  0%   { opacity: 0.88; }
+  25%  { opacity: 0.45; }
+  55%  { opacity: 0.18; }
+  80%  { opacity: 0.06; }
+  100% { opacity: 0; }
 }
 .header .subtitle {
   font-size: 0.62em;
@@ -2088,6 +2110,7 @@ body.enhanced .message {
 </style>
 </head>
 <body>
+<div id="poweron" aria-hidden="true"></div>
 <canvas id="brain-canvas" aria-hidden="true"></canvas>
 
 <!-- ═══════════════════════════════════════════════════
@@ -2298,7 +2321,10 @@ const MIN_SPEECH_DURATION = 600;
 let speechStart = 0;
 let autoProcessing = false;
 
-input.addEventListener('keydown', e => { if (e.key === 'Enter' && !sendBtn.disabled) sendMessage(); });
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !sendBtn.disabled) sendMessage();
+  else if (e.key.length === 1) _kbClick();
+});
 input.addEventListener('input', () => { sendBtn.classList.toggle('ready', input.value.trim().length > 0); });
 
 const CHAT_HISTORY_KEY = 'kyronex_chat_history';
@@ -2347,6 +2373,7 @@ async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
 
+  _msgSend();
   addMessage(msg, 'user');
   input.value = '';
   sendBtn.classList.remove('ready');
@@ -3284,6 +3311,36 @@ function playThinkingSound() {
 }
 
 // ── Son de fin de message (acquittement terminal MU-TH-UR) ──────
+// ── Son frappe clavier (terminal authentique) ───────────────────────────────
+function _kbClick() {
+  if (!audioActivated || !playbackCtx || playbackCtx.state !== 'running') return;
+  const ctx = playbackCtx, t = ctx.currentTime;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = 'square';
+  o.frequency.value = 1100 + Math.random() * 900;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.014, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.042);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + 0.05);
+}
+
+// ── Son envoi message (blip montant 2 notes) ────────────────────────────────
+function _msgSend() {
+  if (!audioActivated || !playbackCtx || playbackCtx.state !== 'running') return;
+  const ctx = playbackCtx;
+  [[880, 0], [1320, 0.06]].forEach(function([freq, delay]) {
+    const t = ctx.currentTime + delay;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.072, t + 0.010);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.090);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + 0.1);
+  });
+}
+
 function playEndOfMessageSound() {
   if (!playbackCtx || playbackCtx.state !== 'running') return;
   const ctx = playbackCtx;
@@ -5465,6 +5522,12 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     on = false;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     ov.classList.add('done');
+    // Flash "power-on moniteur" à mi-dissolve
+    setTimeout(function () {
+      var po = document.getElementById('poweron');
+      if (po) { po.style.display = 'block'; po.classList.add('flash');
+        setTimeout(function() { po.style.display = 'none'; po.classList.remove('flash'); }, 750); }
+    }, 1500);
     setTimeout(function () {
       if (ov) ov.style.display = 'none';
       if (AC) { try { AC.close(); } catch(e){} AC = null; }
