@@ -107,7 +107,7 @@ body > * { position: relative; z-index: 1; }
   100% { opacity: 0; }
 }
 .header .subtitle {
-  font-size: 0.62em;
+  font-size: 0.78em;
   color: #886655;
   margin-top: 5px;
   padding-top: 4px;
@@ -301,7 +301,7 @@ body > * { position: relative; z-index: 1; }
   max-width: 84%;
   padding: 5px 8px 4px;
   border-radius: 0;
-  font-size: 0.88em;
+  font-size: 1.0em;
   line-height: 1.5;
   position: relative;
   animation: msgAppear 0.42s cubic-bezier(0.34,1.56,0.64,1) both;
@@ -391,7 +391,7 @@ body > * { position: relative; z-index: 1; }
   display: none;
 }
 .message .timing {
-  font-size: 0.6em;
+  font-size: 0.7em;
   color: #552222;
   opacity: 0.5;
   font-style: italic;
@@ -1870,6 +1870,84 @@ body.enhanced .message {
   transform: translate3d(0,0,0);
   background: #000;
 }
+
+/* ── INTRO CINÉMATIQUE ── */
+#intro-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999; background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+#intro-overlay.done { opacity: 0; transition: opacity 3s ease-in-out; pointer-events: none; }
+#intro-stars-cv { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+#intro-group {
+  position: absolute; top: 50%; left: 50%;
+  font-family: 'Courier New', monospace; font-size: 2.8em; font-weight: bold;
+  color: #fff; letter-spacing: 0.15em; text-align: center; opacity: 0;
+  white-space: nowrap; pointer-events: none;
+  text-shadow: 0 0 30px rgba(255,100,100,0.8), 0 0 60px rgba(200,50,50,0.4);
+}
+#intro-tagline {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-family: 'Courier New', monospace; font-size: 1.05em; color: #c0c0c0;
+  text-align: center; opacity: 0; line-height: 2.0; transition: opacity 0.8s;
+  width: 80%; pointer-events: none;
+}
+#intro-title {
+  position: absolute; top: 30%; left: 50%; transform: translateX(-50%);
+  font-family: 'Courier New', monospace; font-size: 3.5em; font-weight: bold;
+  color: #aa2222; letter-spacing: 0.3em; text-align: center;
+  opacity: 0; transition: opacity 1.5s; pointer-events: none;
+}
+#intro-title.show { opacity: 1; }
+#intro-title.glow { text-shadow: 0 0 20px #ff4444, 0 0 50px #aa2222, 0 0 100px rgba(200,50,50,0.5); }
+#intro-scanline {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,transparent,#aa2222,#ff4444,#aa2222,transparent);
+  opacity: 0; pointer-events: none;
+}
+#intro-sub {
+  position: absolute; top: 48%; left: 50%; transform: translateX(-50%);
+  font-family: 'Courier New', monospace; font-size: 0.72em; color: #884422;
+  letter-spacing: 6px; text-align: center; opacity: 0; transition: opacity 1s;
+  pointer-events: none;
+}
+#intro-by {
+  position: absolute; top: 58%; left: 50%; transform: translateX(-50%);
+  font-family: 'Courier New', monospace; font-size: 1.5em; font-weight: bold;
+  color: #ffffff; letter-spacing: 6px; text-align: center;
+  opacity: 0; transition: opacity 1s; pointer-events: none;
+}
+#intro-pre {
+  position: absolute; top: 67%; left: 50%; transform: translateX(-50%);
+  font-family: 'Courier New', monospace; font-size: 0.68em; color: #666;
+  letter-spacing: 8px; text-align: center; opacity: 0; transition: opacity 1s;
+  pointer-events: none;
+}
+#intro-final {
+  position: absolute; top: 75%; left: 50%; transform: translateX(-50%);
+  font-family: 'Courier New', monospace; font-size: 1.05em; color: #cc3333;
+  letter-spacing: 4px; text-align: center; opacity: 0; transition: opacity 0.8s;
+  pointer-events: none; width: 90%;
+}
+#intro-final.glitch { opacity: 1; animation: intro-glitch 0.4s ease forwards; }
+#poweron {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: #fff; z-index: 10000; pointer-events: none;
+}
+#poweron.flash { display: block; animation: poweron-flash 0.75s ease-out forwards; }
+@keyframes intro-scan-v {
+  0%   { top: -2px; opacity: 1; }
+  100% { top: 101%; opacity: 0; }
+}
+@keyframes intro-glitch {
+  0%  { clip-path: inset(0 0 0 0); transform: none; }
+  15% { clip-path: inset(10% 0 20% 0); transform: translateX(-4px); }
+  30% { clip-path: inset(60% 0 5% 0); transform: translateX(4px); }
+  45% { clip-path: inset(0 0 0 0); transform: none; }
+  100%{ clip-path: none; transform: none; }
+}
+@keyframes poweron-flash { 0% { opacity:1; } 100% { opacity:0; } }
 
 </style>
 </head>
@@ -5235,7 +5313,7 @@ const _brain = (() => {
 document.addEventListener('DOMContentLoaded', () => _brain.init());
 
 // (intro cinematique supprimée)
-(function () { return; /* supprimée */
+(function () {
   var on = true, tids = [], rafId = null;
   var iCtx, iW, iH, stars = [], hspd = 13;
   var AC = null, MASTER = null, REV = null;
@@ -5517,7 +5595,7 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     var el = document.getElementById('intro-group');
     if (!el) return;
     _whoosh();
-    var st = null, DUR = 5200;
+    var st = null, DUR = 3000;
     function anim(ts) {
       if (!on) { el.style.opacity = '0'; return; }
       if (!st) st = ts;
@@ -5553,8 +5631,8 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     var PR = document.getElementById('intro-pre');
     var FN = document.getElementById('intro-final');
 
-    // 1.5s — KITT FRANCO-BELGE fly-through Superman (en premier — instant majestueux)
-    _t(function () { _flyGroup(); }, 1500);
+    // 1.0s — KITT FRANCO-BELGE fly-through Superman (en premier — instant majestueux)
+    _t(function () { _flyGroup(); }, 1000);
 
     // 2.8s — décélération hyperspace (pendant le fly-through)
     _t(function () {
@@ -5568,41 +5646,41 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
       decel();
     }, 2800);
 
-    // 7.8s — bips boot Alien (3 tonalités ascendantes)
-    _t(function () { _alienBoot(); }, 7800);
+    // 4.5s — bips boot Alien (3 tonalités ascendantes)
+    _t(function () { _alienBoot(); }, 4500);
 
-    // 8.6s — terminal Alien : typewriter rapide + bips
+    // 5.0s — terminal Alien : typewriter rapide + bips
     _t(function () {
       TL.style.opacity = '1';
       TL.style.color = '#4e8f4e';
       _type(TL,
         '> KYRONEX NEURAL NET v7.4.1\n> AUTHENTICATION......[ OK ]\n> BOOT SEQUENCE COMPLETE',
-        40, _beep);
-    }, 8600);
+        25, _beep);
+    }, 5000);
 
-    // 13.0s — texte terminal disparaît
-    _t(function () { TL.style.opacity = '0'; }, 13000);
+    // 8.0s — texte terminal disparaît
+    _t(function () { TL.style.opacity = '0'; }, 8000);
 
-    // 13.8s — texte poétique, typewriter lent, sans bips
+    // 8.5s — texte poétique, typewriter lent, sans bips
     _t(function () {
-      TL.style.color = '#646464';
+      TL.style.color = '#c0c0c0';
       TL.innerHTML = '';
       TL.style.opacity = '1';
       _type(TL,
         'En l\'an 2026, la frontière entre la machine\net la conscience humaine\na définitivement disparu...',
-        72, null);
-    }, 13800);
+        42, null);
+    }, 8500);
 
-    // 21.5s — texte poétique disparaît (laisse le temps de finir ~97 chars × 72ms = 7s depuis 13.8s)
-    _t(function () { TL.style.opacity = '0'; }, 21500);
+    // 14.0s — texte poétique disparaît
+    _t(function () { TL.style.opacity = '0'; }, 14000);
 
-    // 22.3s — KYRONEX s'étend + stab cuivres
+    // 14.5s — KYRONEX s'étend + stab cuivres
     _t(function () {
       _brass(164.8, 0.20);
       TT.classList.add('show');
-    }, 22300);
+    }, 14500);
 
-    // 24.2s — scanline verticale
+    // 15.2s — scanline verticale
     _t(function () {
       if (!SL) return;
       SL.style.animation = 'none';
@@ -5615,34 +5693,47 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
           SL.style.webkitAnimation = 'intro-scan-v 1.2s ease-in-out forwards';
         });
       });
-    }, 24200);
+    }, 15200);
 
-    // 25.0s — SYSTEM INTELLIGENCE
-    _t(function () { _brass(196.0, 0.11); SB.style.opacity = '1'; }, 25000);
+    // 15.7s — SYSTEM INTELLIGENCE
+    _t(function () { _brass(196.0, 0.11); SB.style.opacity = '1'; }, 15700);
 
-    // 26.4s — by MANIX
-    _t(function () { _brass(164.8, 0.09); BY.style.opacity = '1'; }, 26400);
+    // 16.2s — by MANIX
+    _t(function () { _brass(164.8, 0.09); BY.style.opacity = '1'; }, 16200);
 
-    // 27.8s — PRÉSENTE
-    _t(function () { _brass(130.8, 0.08); PR.style.opacity = '1'; }, 27800);
+    // 16.7s — PRÉSENTE
+    _t(function () { _brass(130.8, 0.08); PR.style.opacity = '1'; }, 16700);
 
-    // 29.2s — [ KNIGHT INDUSTRIES TWO THOUSAND ] glitch + gros stab
+    // 17.2s — [ KNIGHT INDUSTRIES TWO THOUSAND ] glitch + gros stab
     _t(function () {
       _brass(130.8, 0.30);
       FN.classList.add('glitch');
       FN.style.opacity = '1';
-    }, 29200);
+    }, 17200);
 
-    // 31.0s — glow intense sur KYRONEX
-    _t(function () { if (TT) TT.classList.add('glow'); }, 31000);
+    // 17.6s — glow intense sur KYRONEX
+    _t(function () { if (TT) TT.classList.add('glow'); }, 17600);
 
-    // 33.5s — fin (morphing dissolve 3s vers interface KITT)
-    _t(function () { _end(); }, 33500);
+    // 18.0s — fin (morphing dissolve 3s vers interface KITT)
+    _t(function () { _end(); }, 18000);
   }
 
   document.addEventListener('DOMContentLoaded', _run);
 })();
 </script>
+
+<!-- ── Intro cinématique ── -->
+<div id="intro-overlay">
+  <canvas id="intro-stars-cv"></canvas>
+  <div id="intro-group">KITT&nbsp;FRANCO&#8209;BELGE</div>
+  <div id="intro-tagline"></div>
+  <div id="intro-title">KYRONEX</div>
+  <div id="intro-scanline"></div>
+  <div id="intro-sub">SYSTEM&nbsp;INTELLIGENCE</div>
+  <div id="intro-by">by&nbsp;MANIX</div>
+  <div id="intro-pre">PRÉSENTE</div>
+  <div id="intro-final">[ KNIGHT INDUSTRIES TWO THOUSAND ]</div>
+</div>
 
 <!-- ── Clavier KITT virtuel ── -->
 <div id="kitt-kb" aria-label="Clavier KITT" aria-hidden="true"></div>
