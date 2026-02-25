@@ -796,89 +796,7 @@ body.kb-open { padding-bottom: 222px; }
 .audio-btn.active { background: radial-gradient(circle at 35% 35%, #0d2a0d, #001100); color: #44ff44; border-color: #006600; box-shadow: 0 0 10px #00ff0022; }
 .audio-btn.active .slash { display: none; }
 
-/* ── Modal identification MU-TH-UR 6000 — style Alien 1979 ── */
-.name-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,4,0,0.96);
-  z-index: 200;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  /* Ligne de scan verte qui descend en boucle */
-  background-image: repeating-linear-gradient(
-    0deg, transparent, transparent 3px, rgba(0,255,60,0.015) 4px
-  );
-}
-.name-overlay.visible { display: flex; }
-.name-box {
-  max-width: 420px;
-  width: 100%;
-  border: 1px solid rgba(0,200,60,0.35);
-  border-top: 2px solid rgba(0,255,80,0.6);
-  padding: 32px 28px 28px;
-  background: rgba(0,8,0,0.95);
-  text-align: center;
-  position: relative;
-  box-shadow: 0 0 40px rgba(0,255,60,0.08), inset 0 0 30px rgba(0,0,0,0.5);
-}
-.name-box::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 10%; right: 10%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #00ff44, transparent);
-  box-shadow: 0 0 12px #00ff4488;
-}
-.name-box .mb-system {
-  font-size: 0.52em;
-  color: #005522;
-  letter-spacing: 4px;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-.name-box h2 {
-  font-size: 1.3em;
-  color: #00ee55;
-  letter-spacing: 5px;
-  margin-bottom: 4px;
-  text-shadow: 0 0 20px #00ff4466;
-  animation: mother-flicker 9s ease-in-out infinite;
-}
-.name-box .mb-sub {
-  font-size: 0.55em;
-  color: #006633;
-  letter-spacing: 2px;
-  margin-bottom: 22px;
-  border-bottom: 1px solid rgba(0,180,60,0.2);
-  padding-bottom: 14px;
-}
-.name-box input {
-  width: 100%;
-  background: rgba(0,12,0,0.9);
-  border: 1px solid rgba(0,180,60,0.4);
-  border-bottom: 2px solid rgba(0,255,80,0.5);
-  color: #00ff77;
-  padding: 12px 16px;
-  font-family: inherit;
-  font-size: 16px;
-  text-align: center;
-  outline: none;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  caret-color: #00ff77;
-}
-.name-box input::placeholder { color: #004422; letter-spacing: 2px; text-transform: none; }
-.name-box input:focus { border-color: rgba(0,255,80,0.7); box-shadow: 0 0 12px rgba(0,255,60,0.15); }
-
-/* Sélecteur de langue dans la modal */
-.lang-selector {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  margin: 18px 0 22px;
-}
+/* Sélecteur de langue KITT */
 .lang-opt {
   background: rgba(0,10,0,0.8);
   border: 1px solid rgba(0,150,50,0.35);
@@ -898,104 +816,6 @@ body.kb-open { padding-bottom: 222px; }
   border-color: rgba(0,255,80,0.7);
   color: #00ff77;
   box-shadow: 0 0 8px rgba(0,255,60,0.2);
-}
-.name-box .mb-btn {
-  background: rgba(0,40,15,0.9);
-  color: #00ff77;
-  border: 1px solid rgba(0,255,80,0.5);
-  border-bottom: 2px solid rgba(0,200,60,0.4);
-  padding: 12px 36px;
-  font-family: inherit;
-  font-weight: bold;
-  font-size: 0.8em;
-  letter-spacing: 3px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-shadow: 0 0 8px rgba(0,255,80,0.5);
-}
-.name-box .mb-btn:hover {
-  background: rgba(0,60,20,0.9);
-  box-shadow: 0 0 16px rgba(0,255,60,0.2);
-}
-.name-box .mb-prompt {
-  font-size: 0.6em;
-  color: #004422;
-  letter-spacing: 1.5px;
-  margin-bottom: 14px;
-}
-.mb-secret-toggle {
-  margin-top: 18px; font-size: 0.5em; color: #1a3a1a;
-  letter-spacing: 2px; cursor: pointer; transition: color 0.3s;
-  text-align: center; user-select: none;
-}
-.mb-secret-toggle:hover { color: #447744; }
-.mb-secret-box {
-  display: none; margin-top: 10px; padding-top: 12px;
-  border-top: 1px solid rgba(0,200,60,0.15);
-}
-.mb-secret-box input {
-  background: rgba(0,15,0,0.8);
-  border: none; border-bottom: 2px solid rgba(0,200,60,0.4);
-  color: #88ff88; font-family: inherit; font-size: 1em;
-  letter-spacing: 6px; padding: 8px 12px; text-align: center;
-  width: 100%; outline: none; margin-bottom: 8px; caret-color: #00ff66;
-  box-sizing: border-box;
-}
-.mb-secret-btn {
-  background: transparent; border: 1px solid rgba(0,200,60,0.25);
-  color: #336633; font-family: inherit; font-size: 0.5em;
-  letter-spacing: 2px; padding: 5px 16px; cursor: pointer;
-  width: 100%; transition: all 0.3s; border-radius: 2px;
-}
-.mb-secret-btn:hover { color: #66ff66; border-color: rgba(0,200,60,0.6); }
-.mb-secret-msg {
-  font-size: 0.5em; letter-spacing: 2px; text-align: center;
-  margin-top: 8px; min-height: 1.2em;
-}
-@keyframes shake-secret {
-  0%,100% { transform: translateX(0); }
-  25%,75% { transform: translateX(-7px); }
-  50% { transform: translateX(7px); }
-}
-.mb-shake { animation: shake-secret 0.35s ease; }
-
-@media (max-width: 480px) {
-  .name-box {
-    padding: 18px 16px 16px;
-  }
-  .name-box h2 {
-    font-size: 1.05em;
-    letter-spacing: 3px;
-  }
-  .name-box .mb-system {
-    font-size: 0.48em;
-    letter-spacing: 2px;
-  }
-  .name-box .mb-sub {
-    font-size: 0.52em;
-    letter-spacing: 1.5px;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-  }
-  .name-box .mb-prompt {
-    font-size: 0.55em;
-    margin-bottom: 10px;
-  }
-  .name-box input {
-    margin-bottom: 10px;
-    padding: 8px 10px;
-  }
-  .lang-selector {
-    margin: 12px 0 14px;
-  }
-  .name-box .mb-btn {
-    padding: 10px 20px;
-    font-size: 0.72em;
-    letter-spacing: 2px;
-  }
-  .mb-secret-toggle {
-    margin-top: 10px;
-  }
 }
 
 /* Status */
@@ -2051,243 +1871,12 @@ body.enhanced .message {
   background: #000;
 }
 
-/* ═══════════════════════════════════════════════════════
-   INTRO CINEMATIQUE KYRONEX
-════════════════════════════════════════════════════════ */
-#intro-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 9999;
-  background: #000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  opacity: 1;
-  transition: opacity 3s ease;
-  font-family: 'Courier New', Courier, monospace;
-}
-#intro-overlay.done { opacity: 0; pointer-events: none; }
-#intro-stars-cv {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  width: 100%; height: 100%;
-}
-#intro-vignette {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(ellipse at 50% 50%, transparent 22%, rgba(0,0,0,0.76) 100%);
-  pointer-events: none;
-}
-#intro-body {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  width: 92%;
-  max-width: 850px;
-}
-#intro-tagline {
-  font-size: clamp(0.62em, 1.8vw, 0.9em);
-  color: #6a6a6a;
-  letter-spacing: 0.13em;
-  line-height: 2.1;
-  min-height: 5em;
-  opacity: 0;
-  transition: opacity 0.9s;
-  margin-bottom: 54px;
-}
-#intro-title-wrap { position: relative; display: inline-block; }
-#intro-title {
-  font-size: clamp(2em, 9vw, 5.8em);
-  font-weight: 900;
-  color: #ff2200;
-  letter-spacing: 0.05em;
-  text-shadow: none;
-  opacity: 0;
-  transform: scale(0.6) translateY(24px);
-  transition: opacity 1.1s,
-              transform 1.6s cubic-bezier(0.16,1,0.3,1),
-              letter-spacing 1.6s cubic-bezier(0.16,1,0.3,1),
-              text-shadow 1.1s;
-  margin-bottom: 6px;
-  white-space: nowrap;
-}
-#intro-title.show {
-  opacity: 1;
-  transform: scale(1) translateY(0);
-  letter-spacing: 0.58em;
-  text-shadow: 0 0 24px #ff2200, 0 0 56px #ff220055, 0 0 96px #ff220022;
-}
-#intro-title.glow {
-  text-shadow: 0 0 44px #ff3300, 0 0 90px #ff330077, 0 0 148px #ff330033;
-}
-#intro-scanline {
-  position: absolute;
-  left: -8%; width: 116%;
-  height: 3px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255,80,0,0.5) 25%,
-    #ff5500 50%,
-    rgba(255,80,0,0.5) 75%,
-    transparent 100%);
-  box-shadow: 0 0 14px #ff4400, 0 0 30px #ff440055;
-  pointer-events: none;
-  top: -5%; opacity: 0;
-}
-@keyframes intro-scan-v {
-  0%   { top: -5%;  opacity: 0;    }
-  8%   { top: 0%;   opacity: 0.95; }
-  85%  { top: 100%; opacity: 0.85; }
-  100% { top: 112%; opacity: 0;    }
-}
-@-webkit-keyframes intro-scan-v {
-  0%   { top: -5%;  opacity: 0;    }
-  8%   { top: 0%;   opacity: 0.95; }
-  85%  { top: 100%; opacity: 0.85; }
-  100% { top: 112%; opacity: 0;    }
-}
-#intro-sub {
-  font-size: clamp(0.48em, 1.4vw, 0.76em);
-  color: #882200;
-  letter-spacing: 0.45em;
-  opacity: 0;
-  transition: opacity 0.75s;
-  margin-bottom: 36px;
-}
-#intro-by {
-  font-size: clamp(0.58em, 1.7vw, 0.86em);
-  color: #464646;
-  letter-spacing: 0.52em;
-  opacity: 0;
-  transition: opacity 0.75s;
-  margin-bottom: 8px;
-}
-#intro-pre {
-  font-size: clamp(0.55em, 1.6vw, 0.82em);
-  color: #3c3c3c;
-  letter-spacing: 0.62em;
-  opacity: 0;
-  transition: opacity 0.75s;
-  margin-bottom: 58px;
-}
-#intro-final {
-  font-size: clamp(0.5em, 1.55vw, 0.82em);
-  color: #ff7750;
-  letter-spacing: 0.22em;
-  opacity: 0;
-  text-shadow: 0 0 18px #ff440055;
-}
-@keyframes intro-glitch {
-  0%   { clip-path: inset(68% 0 0 0); transform: translateX(0);    opacity: 0; }
-  12%  { clip-path: inset(46% 0 0 0); transform: translateX(-5px); opacity: 1; }
-  24%  { clip-path: inset(28% 0 0 0); transform: translateX(5px);              }
-  38%  { clip-path: inset(14% 0 0 0); transform: translateX(-3px);             }
-  52%  { clip-path: inset(5%  0 0 0); transform: translateX(2px);              }
-  72%  { clip-path: inset(1%  0 0 0); transform: translateX(-1px);             }
-  100% { clip-path: inset(0   0 0 0); transform: translateX(0);   opacity: 1;  }
-}
-#intro-final.glitch { animation: intro-glitch 0.85s steps(2) forwards; }
-/* KITT Franco-Belge 3D fly-through */
-@keyframes intro-kb-pulse {
-  0%   { text-shadow: 0 0 28px #ffaa00, 0 0 60px #ff880055, 0 0 100px #ff440022; }
-  50%  { text-shadow: 0 0 52px #ffdd00, 0 0 100px #ffaa0088, 0 0 180px #ff660055; }
-  100% { text-shadow: 0 0 28px #ffaa00, 0 0 60px #ff880055, 0 0 100px #ff440022; }
-}
-@keyframes intro-kb-bar {
-  0%   { transform: scaleX(0); opacity: 0; }
-  40%  { transform: scaleX(1); opacity: 0.9; }
-  100% { transform: scaleX(1); opacity: 0.6; }
-}
-#intro-group {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%) scale(0.01);
-  text-align: center;
-  pointer-events: none;
-  z-index: 4;
-  opacity: 0;
-  will-change: transform, opacity;
-}
-#intro-group-title {
-  font-size: clamp(2.2em, 6.5vw, 4.8em);
-  font-weight: 900;
-  color: #ffd700;
-  letter-spacing: 0.22em;
-  white-space: nowrap;
-  text-shadow: 0 0 28px #ffaa00, 0 0 60px #ff880055, 0 0 100px #ff440022;
-  line-height: 1.1;
-  animation: intro-kb-pulse 2.4s ease-in-out infinite;
-}
-#intro-group-title::after {
-  content: '';
-  display: block;
-  height: 2px;
-  margin: 14px auto 0;
-  width: 80%;
-  background: linear-gradient(90deg, transparent, #ffd700, #ffaa00, #ffd700, transparent);
-  box-shadow: 0 0 14px #ffaa00;
-  animation: intro-kb-bar 0.8s ease-out 0.4s both;
-}
-#intro-group-sub {
-  font-size: clamp(0.9em, 2.6vw, 1.85em);
-  color: #e8b000;
-  letter-spacing: 0.75em;
-  margin-top: 18px;
-  text-shadow: 0 0 22px #ffaa0077, 0 0 50px #ff660044;
-  text-transform: uppercase;
-}
-#intro-skip-btn {
-  position: absolute;
-  bottom: 26px; right: 26px;
-  background: transparent;
-  border: 1px solid #1c1c1c;
-  color: #323232;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.68em;
-  letter-spacing: 2px;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: color 0.3s, border-color 0.3s;
-  z-index: 2;
-  -webkit-tap-highlight-color: transparent;
-}
-#intro-skip-btn:hover { color: #888; border-color: #444; }
-@media (max-width: 480px) {
-  #intro-title.show { letter-spacing: 0.28em; }
-  #intro-title { font-size: clamp(2.2em, 11vw, 4em); }
-}
 </style>
 </head>
 <body>
 <div id="poweron" aria-hidden="true"></div>
 <canvas id="brain-canvas" aria-hidden="true"></canvas>
 
-<!-- ═══════════════════════════════════════════════════
-     INTRO CINEMATIQUE KYRONEX
-════════════════════════════════════════════════════ -->
-<div id="intro-overlay" aria-hidden="true">
-  <canvas id="intro-stars-cv"></canvas>
-  <div id="intro-vignette"></div>
-  <div id="intro-body">
-    <div id="intro-tagline"></div>
-    <div id="intro-title-wrap">
-      <div id="intro-title">KYRONEX</div>
-      <div id="intro-scanline"></div>
-    </div>
-    <div id="intro-sub">S Y S T E M &nbsp; I N T E L L I G E N C E</div>
-    <div id="intro-by">b y &nbsp;&nbsp;&nbsp; M A N I X</div>
-    <div id="intro-pre">P R &Eacute; S E N T E &nbsp;&nbsp;&#9679;&nbsp;&#9679;&nbsp;&#9679;</div>
-    <div id="intro-final">[ KNIGHT INDUSTRIES TWO THOUSAND ]</div>
-  </div>
-  <!-- KITT Franco-Belge 3D approach Superman-style -->
-  <div id="intro-group">
-    <div id="intro-group-title">KITT FRANCO-BELGE</div>
-    <div id="intro-group-sub">P R &Eacute; S E N T E</div>
-  </div>
-  <button id="intro-skip-btn" onclick="_introSkip()">[ PASSER ]</button>
-</div>
 
 <div class="scan-beam" aria-hidden="true"></div>
 
@@ -3633,9 +3222,10 @@ async function initUserIdentity() {
     } catch(e) {}
   }
 
-  // Première fois : afficher la modal MOTHER
-  document.getElementById('nameOverlay').classList.add('visible');
-  document.getElementById('nameInput').focus();
+  // Première fois : lancer directement en tant que Visiteur
+  _preferredLang = localStorage.getItem('kyronex_lang') || 'fr';
+  unlockUI('Visiteur', _preferredLang);
+  _startHeartbeat();
 }
 
 async function submitName() {
@@ -3650,7 +3240,8 @@ async function submitName() {
       body: JSON.stringify({ name, lang: _preferredLang })
     });
   } catch(e) {}
-  document.getElementById('nameOverlay').classList.remove('visible');
+  const _ov = document.getElementById('nameOverlay');
+  if (_ov) _ov.classList.remove('visible');
   unlockUI(name, _preferredLang);
   _startHeartbeat();
 }
@@ -4438,6 +4029,9 @@ function _applyUILang(lang) {
     pt: 'Fale com KITT...', es: 'Hable con KITT...', nl: 'Spreek met KITT...',
   };
   if (input && !input.disabled) input.placeholder = PLACEHOLDERS[lang] || PLACEHOLDERS.fr;
+  document.querySelectorAll('.lang-opt').forEach(b => {
+    b.classList.toggle('selected', b.dataset.lang === lang);
+  });
 }
 
 let _emotionTimeout = null;
@@ -4590,20 +4184,10 @@ connectProactive();
     <div class="mp-sep"></div>
     <div class="mp-mem-title">&#9632; DOCS PDF</div>
     <div id="mp-pdf-list"></div>
-  </div>
-</div>
-
-<div class="footer-credit" onclick="document.getElementById('about').classList.add('visible')">&copy; 2026 ByManix</div>
-
-<div class="name-overlay" id="nameOverlay">
-  <div class="name-box">
-    <div class="mb-system">MU-TH-UR 6000 · WEYLAND-YUTANI CORP</div>
-    <h2 id="mb-title">IDENTIFICATION</h2>
-    <div class="mb-sub" id="mb-sub">PROTOCOLE D'ACCES — SYSTEME KYRONEX</div>
-    <div class="mb-prompt" id="mb-prompt">ENTREZ VOTRE IDENTIFIANT OPERATEUR :</div>
-    <input type="text" id="nameInput" placeholder="Votre prenom" maxlength="30" autocomplete="off" autocorrect="off">
-    <div class="lang-selector">
-      <button class="lang-opt selected" data-lang="fr" onclick="selectLang('fr')">FR</button>
+    <div class="mp-sep"></div>
+    <div class="mp-mem-title">&#9632; LANGUE</div>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+      <button class="lang-opt" data-lang="fr" onclick="selectLang('fr')">FR</button>
       <button class="lang-opt" data-lang="en" onclick="selectLang('en')">EN</button>
       <button class="lang-opt" data-lang="de" onclick="selectLang('de')">DE</button>
       <button class="lang-opt" data-lang="it" onclick="selectLang('it')">IT</button>
@@ -4611,16 +4195,11 @@ connectProactive();
       <button class="lang-opt" data-lang="pt" onclick="selectLang('pt')">PT</button>
       <button class="lang-opt" data-lang="nl" onclick="selectLang('nl')">NL</button>
     </div>
-    <button class="mb-btn" id="mb-btn" onclick="submitName()">INITIER CONNEXION</button>
-    <div class="mb-secret-toggle" onclick="toggleSecretPin()">[ ACCES DIRECT ]</div>
-    <div class="mb-secret-box" id="mbSecretBox">
-      <input type="password" id="secretPin" placeholder="CODE" maxlength="6"
-             autocomplete="off" onkeydown="if(event.key==='Enter')checkSecretPin()">
-      <button class="mb-secret-btn" onclick="checkSecretPin()">VALIDER</button>
-      <div class="mb-secret-msg" id="mbSecretMsg"></div>
-    </div>
   </div>
 </div>
+
+<div class="footer-credit" onclick="document.getElementById('about').classList.add('visible')">&copy; 2026 ByManix</div>
+
 
 <!-- ── Visiteurs Overlay ── -->
 <div class="rpt-overlay" id="rptOverlay" onclick="if(event.target===this)toggleRptPanel()">
@@ -5272,18 +4851,21 @@ function toggleSecretPin() {
   if (show) setTimeout(() => document.getElementById('secretPin').focus(), 50);
 }
 function checkSecretPin() {
-  const pin = document.getElementById('secretPin').value.trim();
+  const pinEl = document.getElementById('secretPin');
+  if (!pinEl) { unlockUI('Manix', 'fr'); return; }
+  const pin = pinEl.value.trim();
   const msg = document.getElementById('mbSecretMsg');
   if (pin === '5505') {
-    msg.style.color = '#44ff88';
-    msg.textContent = '[ ACCES AUTORISE ]';
+    if (msg) { msg.style.color = '#44ff88'; msg.textContent = '[ ACCES AUTORISE ]'; }
     const ov = document.getElementById('nameOverlay');
-    ov.style.transition = 'opacity 0.4s';
-    ov.style.opacity = '0';
-    setTimeout(() => {
-      ov.classList.remove('visible');
-      ov.style.opacity = ''; ov.style.transition = '';
-    }, 400);
+    if (ov) {
+      ov.style.transition = 'opacity 0.4s';
+      ov.style.opacity = '0';
+      setTimeout(() => {
+        ov.classList.remove('visible');
+        ov.style.opacity = ''; ov.style.transition = '';
+      }, 400);
+    }
     unlockUI('Manix', 'fr');
   } else {
     _secretAttempts++;
@@ -5652,11 +5234,8 @@ const _brain = (() => {
 
 document.addEventListener('DOMContentLoaded', () => _brain.init());
 
-// ═══════════════════════════════════════════════════════════════
-//  INTRO CINEMATIQUE v2 — KYRONEX A.I. + KITT FRANCO-BELGE
-//  Musique 80s synth · SFX Alien/Superman · Hyperspace · Fly-through
-// ═══════════════════════════════════════════════════════════════
-(function () {
+// (intro cinematique supprimée)
+(function () { return; /* supprimée */
   var on = true, tids = [], rafId = null;
   var iCtx, iW, iH, stars = [], hspd = 13;
   var AC = null, MASTER = null, REV = null;
