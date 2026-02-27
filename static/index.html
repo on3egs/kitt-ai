@@ -2051,45 +2051,23 @@ body.enhanced .message {
 /* GEMINI KITT OVERRIDE */
 :root { --red-neon: #ff0000; --red-glow: rgba(255, 0, 0, 0.6); }
 body { background: #000 !important; }
-.header h1 { color: var(--red-neon) !important; text-shadow: 0 0 20px var(--red-glow) !important; }
-.scanner { border-color: var(--red-neon) !important; box-shadow: 0 0 20px var(--red-glow) !important; }
-button { border: 1px solid var(--red-neon) !important; background: rgba(20,0,0,0.8) !important; color: var(--red-neon) !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 2px !important; }
-button:hover { background: var(--red-neon) !important; color: #000 !important; box-shadow: 0 0 30px var(--red-neon) !important; }
-/* Masquer boutons header superflus et boutons input zone */
-.reset-btn, .ambient-btn, .vig-btn, .night-btn, .vis-btn, .rpt-btn, .enhance-btn, .conv-btn, .wake-btn, .cam-btn, .audio-btn { display: none !important; }
-</style>
-/* V35.0 - CINEMATIC CRT OVERLAY */ 
+/* Filtre CRT : pointer-events: none est CRITIQUE ici */
 body::after { 
-    content: ""; 
- display: block; 
- position: fixed; 
- top: 0; 
- left: 0; 
- bottom: 0; 
- right: 0; 
+ content: ""; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; 
  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); 
- z-index: 9999; 
- background-size: 100% 4px, 3px 100%; 
- pointer-events: none; 
- opacity: 0.2; 
+ z-index: 9999; background-size: 100% 4px, 3px 100%; pointer-events: none !important; opacity: 0.2; 
 } 
-/* V35.0 - MOTHER PANEL ALIEN STYLE */ 
-.mother-panel { 
- font-family: Courier New, Courier, monospace !important; 
- border: 1px solid rgba(255, 0, 0, 0.3) !important; 
- box-shadow: 0 0 15px rgba(255, 0, 0, 0.1) inset; 
- background: rgba(0, 0, 0, 0.85) !important; 
-} 
-.mother-panel .mp-mem-item { 
- border-left: 3px solid #ff0000; 
- margin-bottom: 5px; 
- padding-left: 8px; 
- color: #ff4444 !important; 
- text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); 
-}
+.header h1 { color: var(--red-neon) !important; text-shadow: 0 0 20px var(--red-glow) !important; }
+.scanner { border-color: var(--red-neon) !important; box-shadow: 0 0 20px var(--red-glow) !important; }
+button { border: 1px solid var(--red-neon) !important; background: rgba(20,0,0,0.8) !important; color: var(--red-neon) !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 2px !important; pointer-events: auto !important; cursor: pointer !important; }
+button:hover { background: var(--red-neon) !important; color: #000 !important; box-shadow: 0 0 30px var(--red-neon) !important; }
+/* Désactiver le canvas cerveau s'il bloque les clics */
+#brain-canvas { pointer-events: none !important; z-index: 1 !important; }
+#orb { pointer-events: none !important; }
+</style>
 <style>
-/* FORCAGE INTERACTIVITE RADICAL V35.5 */
+/* FORCAGE INTERACTIVITE RADICAL V35.6 */
 .chat-area, .input-area {
   position: relative !important;
   z-index: 8000 !important;
@@ -2098,6 +2076,21 @@ body::after {
 input#input {
   pointer-events: auto !important;
   cursor: text !important;
+  z-index: 8001 !important;
+}
+button#mic, button#automic, button#send {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 8001 !important;
+}
+#intro-overlay {
+  z-index: 9000 !important;
+}
+#intro-overlay.done {
+  display: none !important;
+  pointer-events: none !important;
+}
+</style>
   z-index: 8001 !important;
 }
 button#mic, button#automic, button#send {
@@ -2216,21 +2209,9 @@ button#mic, button#automic, button#send {
 
 <div class="header">
   <h1>K I T T</h1>
-  <div class="subtitle">KNIGHT INDUSTRIES TWO THOUSAND &nbsp;·&nbsp; KYRONEX A.I. &nbsp;·&nbsp; by Manix</div>
+  <div class="subtitle">KNIGHT INDUSTRIES TWO THOUSAND &nbsp;·&nbsp; KYRONEX A.I. &mdash; V35.6</div>
   <div class="mother-line">MU-TH-UR 6000 &nbsp;·&nbsp; NEURAL INTERFACE ACTIVE</div>
-  <div class="header-btns">
-    <button class="reset-btn" id="resetbtn" onclick="resetChat()" title="Vider l'historique KITT">RST</button>
-    <button class="vig-btn" id="vigbtn" onclick="_requireNightAuth(toggleVigilance)" title="Mode Vigilance — surveillance caméra">VIG</button>
-    <button class="ambient-btn" id="ambientbtn" onclick="_requireNightAuth(toggleAmbient)" title="Sons d'ambiance système">AMB</button>
-    <button class="night-btn" id="nightbtn" onclick="toggleNightPanel()" title="Night Scheduler — améliorations autonomes">NIGHT</button>
-    <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
-    <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
-    <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
-    <button class="conv-btn" id="convbtn" onclick="openConvAdmin()" aria-label="Archives conversations" title="Archives des conversations KITT">CONV</button>
-    <button class="dl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
-    <button class="git-btn" id="gitbtn" onclick="_requireNightAuth(gitPushHtml)" title="Pousser index.html vers GitHub">GIT</button>
-    <button class="run-btn" id="runbtn" onclick="_requireNightAuth(runImprove)" title="Lancer une amélioration autonome maintenant">RUN</button>
-  </div>
+  <div class="header-btns"></div>
 </div>
 
 <div class="scanner-container">
@@ -2242,11 +2223,6 @@ button#mic, button#automic, button#send {
 
 <div class="voicebox-container">
   <canvas id="voicebox" width="280" height="44"></canvas>
-</div>
-
-<div class="mobile-stats" id="mobileStats">
-  <span id="ms-online">—</span> en ligne &nbsp;·&nbsp;
-  <span id="ms-health" class="online">INIT</span>
 </div>
 
 <div class="chat-area" id="chat"></div>
