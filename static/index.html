@@ -475,6 +475,7 @@ body > * { position: relative; z-index: 1; }
   align-items: center;
   position: relative;
   flex-shrink: 0;
+  z-index: 1000; /* Toujours au-dessus du cerveau et de l'orbe */
 }
 .input-area::before {
   content: '';
@@ -2087,6 +2088,31 @@ body::after {
  color: #ff4444 !important; 
  text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); 
 }
+<style>
+/* FORCAGE INTERACTIVITE RADICAL V35.5 */
+.chat-area, .input-area {
+  position: relative !important;
+  z-index: 8000 !important;
+  pointer-events: auto !important;
+}
+input#input {
+  pointer-events: auto !important;
+  cursor: text !important;
+  z-index: 8001 !important;
+}
+button#mic, button#automic, button#send {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 8001 !important;
+}
+#intro-overlay {
+  z-index: 9000 !important;
+}
+#intro-overlay.done {
+  display: none !important;
+  pointer-events: none !important;
+}
+</style>
 </head>
 <body>
 <div id="poweron" aria-hidden="true"></div>
@@ -3389,10 +3415,11 @@ function selectLang(lang) {
 })();
 
 function lockUI() {
-  _brain.setState('thinking');
-  input.disabled = true;
-  sendBtn.disabled = true;
-  input.placeholder = 'Identifiez-vous d\'abord...';
+  // Désactivation du verrouillage pour éviter de bloquer l'utilisateur
+  console.log('[KYRONEX] Bypass lockUI');
+  _brain.setState('idle');
+  input.disabled = false;
+  sendBtn.disabled = false;
 }
 
 function unlockUI(name, lang) {
@@ -5545,6 +5572,8 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     on = false;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     ov.classList.add('done');
+    ov.style.pointerEvents = 'none'; // Libérer immédiatement les clics
+    
     // Flash "power-on moniteur" à mi-dissolve
     setTimeout(function () {
       var po = document.getElementById('poweron');
@@ -5554,7 +5583,7 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     setTimeout(function () {
       if (ov) {
         ov.style.display = 'none';
-        ov.remove(); // Supprimer du DOM pour libérer les clics sur iOS
+        ov.remove(); // Supprimer du DOM définitivement
       }
       if (AC) { try { AC.close(); } catch(e){} AC = null; }
     }, 3200);
