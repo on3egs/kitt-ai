@@ -1898,6 +1898,14 @@ async def send_proactive(message: str, emotion: str = "normal"):
     """Envoie un message proactif à tous les clients connectés avec TTS."""
     if not _proactive_ws:
         return
+
+    # Anti-superposition : si une interaction chat a eu lieu il y a moins de 10s, on attend
+    global _last_interaction_time
+    wait_count = 0
+    while (time.time() - _last_interaction_time) < 10 and wait_count < 30:
+        await asyncio.sleep(2)
+        wait_count += 1
+
     # TTS du message proactif
     audio_url = None
     try:
@@ -1963,8 +1971,8 @@ async def proactive_loop(app):
                 greetings = {
                     6: "Bonjour Manix. Mes systèmes sont en ligne. Une nouvelle journée commence.",
                     7: "Il est 7 heures. Tous mes capteurs sont opérationnels. Prêt pour la mission.",
-                    12: "Il est midi. Peut-être une pause s'impose ? Mes circuits ne connaissent pas la faim, mais je comprends le concept.",
-                    18: "Bonsoir. La journée a été productive, j'espère.",
+                    12: "Il est midi. Une pause est peut-être nécessaire ? Mes circuits ne connaissent pas la faim, mais je saisis parfaitement le concept.",
+                    18: "Bonsoir Manix. J'espère que votre journée a été productive.",
                     22: "Il est 22 heures. Je reste vigilant, mais vous devriez peut-être envisager du repos.",
                     0: "Minuit. Mon scanner veille. Bonne nuit, Manix.",
                 }
@@ -1984,8 +1992,8 @@ async def proactive_loop(app):
 
             # Alerte RAM critique
             ram_avail = _read_ram_available_mb()
-            if ram_avail < 500 and _proactive_ws:
-                await send_proactive(f"Attention. Seulement {ram_avail}MB de RAM disponible. Mes systèmes pourraient ralentir.", "worried")
+            if ram_avail < 100 and _proactive_ws:
+                await send_proactive(f"Attention Manix. Seulement {ram_avail}MB de RAM disponible. Mes systèmes sont en charge critique.", "worried")
 
             # ── Mode Vigilance — surveillance caméra ─────────────────
             global _vigilance_last_check, _vigilance_last_count
@@ -2020,6 +2028,14 @@ async def send_vigilance_alert(message: str):
     """Envoie une alerte vigilance (type distinct pour UI rouge + son)."""
     if not _proactive_ws:
         return
+
+    # Anti-superposition : si interaction récente, on attend
+    global _last_interaction_time
+    wait_count = 0
+    while (time.time() - _last_interaction_time) < 10 and wait_count < 30:
+        await asyncio.sleep(2)
+        wait_count += 1
+
     audio_url = None
     try:
         audio_url = await _synth_chunk(message, "worried")
