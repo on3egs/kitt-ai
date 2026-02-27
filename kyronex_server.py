@@ -763,14 +763,13 @@ _LANG_NAMES = {
 }
 
 def get_system_prompt(user_name: str = "", user_lang: str = "") -> str:
-    """Construit le system prompt adapté à l'utilisateur."""
+    """Construit le system prompt adapté à l'utilisateur — Langue verrouillée FR."""
     prompt = _BASE_PROMPT
-    if user_lang:
-        lang_name = _LANG_NAMES.get(user_lang, user_lang)
-        prompt = prompt.replace(
-            "Réponds dans la langue de l'interlocuteur (fr/en/de/it/pt).",
-            f"Tu réponds UNIQUEMENT en {lang_name}. Ne change JAMAIS de langue, quelle que soit la langue de ton interlocuteur. RÈGLE ABSOLUE."
-        )
+    # Forçage Français systématique
+    prompt = prompt.replace(
+        "Réponds dans la langue de l'interlocuteur (fr/en/de/it/pt).",
+        "Tu réponds UNIQUEMENT en français. Ne change JAMAIS de langue, quelle que soit la langue de ton interlocuteur. RÈGLE ABSOLUE."
+    )
     if user_name:
         # Chercher correspondance dans les personnalités connues
         personality = _UNKNOWN_PERSONALITY

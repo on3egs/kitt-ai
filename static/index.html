@@ -2754,6 +2754,7 @@ async function sendToSTT(chunks, sampleRate) {
 
   const formData = new FormData();
   formData.append('audio', wavBlob, 'recording.wav');
+  formData.append('lang', 'fr'); // Forçage Français systématique
 
   const res = await fetch('/api/stt', { method: 'POST', body: formData });
   return await res.json();
