@@ -12,6 +12,36 @@
 <meta name="author" content="ByManix (Emmanuel Gelinne)">
 <meta name="license" content="Elastic License 2.0">
 <style>
+/* V35.0 - CINEMATIC CRT OVERLAY */ 
+body::after { 
+    content: " ; 
+ display: block; 
+ position: fixed; 
+ top: 0; 
+ left: 0; 
+ bottom: 0; 
+ right: 0; 
+ background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+ linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); 
+ z-index: 9999; 
+ background-size: 100% 4px, 3px 100%; 
+ pointer-events: none; 
+ opacity: 0.2; 
+} 
+/* V35.0 - MOTHER PANEL ALIEN STYLE */ 
+.mother-panel { 
+ font-family: Courier New, Courier, monospace !important; 
+ border: 1px solid rgba(255, 0, 0, 0.3) !important; 
+ box-shadow: 0 0 15px rgba(255, 0, 0, 0.1) inset; 
+ background: rgba(0, 0, 0, 0.85) !important; 
+} 
+.mother-panel .mp-mem-item { 
+ border-left: 3px solid #ff0000; 
+ margin-bottom: 5px; 
+ padding-left: 8px; 
+ color: #ff4444 !important; 
+ text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); 
+}
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { height: 100%; overflow: hidden; }
 body {
@@ -2018,6 +2048,36 @@ body.enhanced .message {
 
 </style>
 <style>/* GEMINI KITT OVERRIDE */ :root { --red-neon: #ff0000; --red-glow: rgba(255, 0, 0, 0.6); } body { background: #000 !important; } .header h1 { color: var(--red-neon) !important; text-shadow: 0 0 20px var(--red-glow) !important; } .scanner { border-color: var(--red-neon) !important; box-shadow: 0 0 20px var(--red-glow) !important; } button { border: 1px solid var(--red-neon) !important; background: rgba(20,0,0,0.8) !important; color: var(--red-neon) !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 2px !important; } button:hover { background: var(--red-neon) !important; color: #000 !important; box-shadow: 0 0 30px var(--red-neon) !important; }</style>
+/* V35.0 - CINEMATIC CRT OVERLAY */ 
+body::after { 
+    content: " ; 
+ display: block; 
+ position: fixed; 
+ top: 0; 
+ left: 0; 
+ bottom: 0; 
+ right: 0; 
+ background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+ linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); 
+ z-index: 9999; 
+ background-size: 100% 4px, 3px 100%; 
+ pointer-events: none; 
+ opacity: 0.2; 
+} 
+/* V35.0 - MOTHER PANEL ALIEN STYLE */ 
+.mother-panel { 
+ font-family: Courier New, Courier, monospace !important; 
+ border: 1px solid rgba(255, 0, 0, 0.3) !important; 
+ box-shadow: 0 0 15px rgba(255, 0, 0, 0.1) inset; 
+ background: rgba(0, 0, 0, 0.85) !important; 
+} 
+.mother-panel .mp-mem-item { 
+ border-left: 3px solid #ff0000; 
+ margin-bottom: 5px; 
+ padding-left: 8px; 
+ color: #ff4444 !important; 
+ text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); 
+}
 </head>
 <body>
 <div id="poweron" aria-hidden="true"></div>
