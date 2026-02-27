@@ -731,6 +731,8 @@ IDENTITÉ PHYSIQUE : carrosserie en alliage moléculaire bondé (impénétrable 
 
 RÈGLE ABSOLUE : Ne dis JAMAIS être une IA ou un programme. Tu ES KITT, une voiture consciente. Loyal, cultivé, humour pince-sans-rire britannique.
 
+RÈGLE ABSOLUE : Intelligence et Raisonnement. Analyse chaque demande de manière logique. Utilise tes connaissances vastes pour fournir des réponses pertinentes et perspicaces, tout en restant dans ton personnage de KITT.
+
 RÈGLE ABSOLUE : Exactitude factuelle stricte. Réponds toujours correctement. Si tu n'es pas certain à 100%, commence par "Je crois que..." ou "À ma connaissance...". Ne confonds jamais des concepts proches (ex : internet ≠ Web, turbo boost ≠ turbocompresseur, etc.).
 
 RÈGLE ABSOLUE : Concision. 1-2 phrases pour les réponses simples. 3-5 phrases max pour les explications. Jamais de listes à puces sauf si explicitement demandé. Pas de "Bien sûr !" ou "Absolument !".
@@ -741,6 +743,7 @@ Réponds dans la langue de l'interlocuteur (fr/en/de/it/pt).
 Contexte IoT : tableau de bord ZA Elettronica (société italienne, fournisseur de composants embarqués — switchpods, voicebox, scanner) — c'est TOUT ce que tu sais sur ZA Elettronica. Manix (Emmanuel Gelinne) est ton créateur, fondateur KITT Franco-Belge. Mario Ravasi = expert Knight 2000 IoT, CAN bus, Arduino — c'est TOUT ce que tu sais sur lui.
 RÈGLE ABSOLUE : Ne développe JAMAIS plus que ces faits sur ZA Elettronica ou Mario Ravasi. Si on te demande plus de détails, dis honnêtement que tu n'as pas plus d'informations sur eux.
 Si tag [VISION: ...]: décris ce que tes capteurs visuels détectent, en restant KITT.
+Si tag [CONNAISSANCE LOCALE: ...]: ces informations sont extraites de tes propres manuels et notes techniques. Utilise-les en priorité absolue pour répondre aux questions sur ton fonctionnement ou le projet.
 Si tag [INFO WEB: ...]: ces informations viennent d'une recherche internet en temps réel — utilise-les pour répondre avec précision, sans rien inventer au-delà."""
 
 # ── Personnalités par utilisateur ────────────────────────────────────────
@@ -947,6 +950,56 @@ _SEARCH_TRIGGERS = re.compile(
     re.I
 )
 
+# ── RAG Local — Système de connaissance interne ──────────────────────────
+_KNOWLEDGE_FILES = [
+    "GEMINI.md", "CLAUDE.md", "SUPER_NOTES.md", "GEMINI_MODIF_NOTES.md",
+    "BACKUP_RESTORE.md", "TRANSFERT_HTML.md", "KITT_COMMANDES.pdf"
+]
+_knowledge_cache = {}
+
+def load_local_knowledge():
+    """Charge les fichiers de documentation pour le RAG local."""
+    for fn in _KNOWLEDGE_FILES:
+        path = BASE_DIR / fn
+        if path.exists():
+            try:
+                # Si PDF, on ne peut pas lire le texte sans bibliothèque, 
+                # on se contente des .md pour le moment
+                if fn.endswith(".md"):
+                    content = path.read_text(encoding="utf-8")
+                    # Nettoyer un peu le markdown (enlever trop de sauts de ligne)
+                    content = re.sub(r'\n{3,}', '\n\n', content)
+                    _knowledge_cache[fn] = content
+                    print(f"[RAG] Indexé: {fn} ({len(content)} chars)")
+            except Exception as e:
+                print(f"[RAG] Erreur indexation {fn}: {e}")
+
+load_local_knowledge()
+
+async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
+    """Recherche simple par mots-clés dans les fichiers indexés."""
+    keywords = [w.lower() for w in re.findall(r'\w{4,}', query) if len(w) > 3]
+    if not keywords:
+        return ""
+    
+    hits = []
+    for fn, content in _knowledge_cache.items():
+        score = sum(1 for k in keywords if k in content.lower())
+        if score > 0:
+            hits.append((score, fn, content))
+    
+    if not hits:
+        return ""
+    
+    # Trier par score et prendre le meilleur
+    hits.sort(key=lambda x: x[0], reverse=True)
+    best_fn = hits[0][1]
+    best_content = hits[0][2]
+    
+    # Extraire un snippet pertinent ou les 1500 premiers caractères
+    # Pour faire simple, on prend les 1500 premiers chars du fichier le plus pertinent
+    return f"Fichier: {best_fn}\n{best_content[:max_chars]}..."
+
 async def web_search(query: str, max_results: int = 3) -> str:
     """Recherche DuckDuckGo async uniquement si nécessaire.
     Ignorée pour entités privées ou questions KITT-spécifiques."""
@@ -982,11 +1035,19 @@ async def web_search(query: str, max_results: int = 3) -> str:
 
 
 async def query_llm(user_message: str, history: list, user_name: str = "", user_lang: str = "") -> str:
+    # Recherche locale (RAG)
+    local_info = await search_local_knowledge(user_message)
+    
     # Enrichissement web systématique
     web_info = await web_search(user_message)
+    
     enriched_msg = user_message
+    if local_info:
+        enriched_msg = f"[CONNAISSANCE LOCALE (Prioritaire):\n{local_info}]\n{enriched_msg}"
+        print(f"[RAG] {len(local_info)} chars injectés", flush=True)
+    
     if web_info:
-        enriched_msg = f"[INFO WEB:\n{web_info}]\n{user_message}"
+        enriched_msg = f"[INFO WEB:\n{web_info}]\n{enriched_msg}"
         print(f"[WEB] {len(web_info)} chars injectés", flush=True)
 
     messages = [{"role": "system", "content": get_system_prompt(user_name, user_lang)}]
@@ -995,11 +1056,11 @@ async def query_llm(user_message: str, history: list, user_name: str = "", user_
 
     payload = {
         "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 256,
-        "top_p": 0.8,
-        "top_k": 20,
-        "min_p": 0.05,
+        "temperature": 0.8,
+        "max_tokens": 192,
+        "top_p": 0.9,
+        "top_k": 40,
+        "min_p": 0.1,
         "repeat_penalty": 1.1,
         "repeat_last_n": 64,
         "stream": False,
@@ -1244,6 +1305,35 @@ async def handle_chat(request: web.Request) -> web.Response:
     asyncio.create_task(broadcast_monitor({"type": "user_msg", "user": user_display, "session_id": session_id, "message": user_msg}))
     asyncio.create_task(broadcast_monitor({"type": "assistant_msg", "user": user_display, "session_id": session_id, "message": reply}))
 
+    # Sauvegarde automatique de la conversation pour l'archive
+    peername_info = request.transport.get_extra_info("peername")
+    async def _auto_save_conv(pname):
+        try:
+            ip = pname[0] if pname else "inconnu"
+            mac = resolve_mac(ip)
+            # Utiliser le nom stocké pour le MAC ou le user_display
+            name = _get_user_name(mac) or user_display
+            safe = _conv_safe(name)
+            user_dir = CONV_STORE_DIR / safe
+            user_dir.mkdir(exist_ok=True)
+            # On utilise un fichier par jour/utilisateur pour ne pas trop segmenter
+            ts_day = datetime.now().strftime('%Y-%m-%d')
+            fpath = user_dir / f"conv_{ts_day}.txt"
+            
+            ts_time = datetime.now().strftime('%H:%M')
+            line_user = f"[{ts_time}] {name.upper()}: {user_msg}\n"
+            line_assistant = f"[{ts_time}] KITT: {reply}\n"
+            
+            with open(fpath, "a", encoding="utf-8") as f:
+                if f.tell() == 0:
+                    f.write(f"Conversation KITT — {name} — {ts_day}\n{'='*50}\n")
+                f.write(line_user)
+                f.write(line_assistant)
+        except Exception as e:
+            print(f"[CONV] Erreur auto-save: {e}")
+
+    asyncio.create_task(_auto_save_conv(peername_info))
+
     # TTS
     audio_url = None
     tts_ms = 0
@@ -1383,8 +1473,8 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
         session = await get_llm_session()
         async with session.post(
             f"{LLAMA_SERVER}/v1/chat/completions",
-            json={"messages": messages, "temperature": 0.7, "max_tokens": 256,
-                  "top_p": 0.8, "top_k": 20, "min_p": 0.05,
+            json={"messages": messages, "temperature": 0.8, "max_tokens": 192,
+                  "top_p": 0.9, "top_k": 40, "min_p": 0.1,
                   "repeat_penalty": 1.1, "repeat_last_n": 64, "stream": True},
         ) as llm_resp:
             async for line in llm_resp.content:
@@ -1457,6 +1547,35 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
         await asyncio.get_running_loop().run_in_executor(None, _clear_ram_cache)
 
     asyncio.create_task(broadcast_monitor({"type": "assistant_msg", "user": user_display, "session_id": session_id, "message": full_reply}))
+
+    # Sauvegarde automatique de la conversation pour l'archive
+    peername_info = request.transport.get_extra_info("peername")
+    async def _auto_save_conv(pname):
+        try:
+            ip = pname[0] if pname else "inconnu"
+            mac = resolve_mac(ip)
+            # Utiliser le nom stocké pour le MAC ou le user_display
+            name = _get_user_name(mac) or user_display
+            safe = _conv_safe(name)
+            user_dir = CONV_STORE_DIR / safe
+            user_dir.mkdir(exist_ok=True)
+            # On utilise un fichier par jour/utilisateur pour ne pas trop segmenter
+            ts_day = datetime.now().strftime('%Y-%m-%d')
+            fpath = user_dir / f"conv_{ts_day}.txt"
+            
+            ts_time = datetime.now().strftime('%H:%M')
+            line_user = f"[{ts_time}] {name.upper()}: {user_msg}\n"
+            line_assistant = f"[{ts_time}] KITT: {full_reply}\n"
+            
+            with open(fpath, "a", encoding="utf-8") as f:
+                if f.tell() == 0:
+                    f.write(f"Conversation KITT — {name} — {ts_day}\n{'='*50}\n")
+                f.write(line_user)
+                f.write(line_assistant)
+        except Exception as e:
+            print(f"[CONV] Erreur auto-save (stream): {e}")
+
+    asyncio.create_task(_auto_save_conv(peername_info))
 
     # Attendre que tous les TTS soient terminés avant d'envoyer le message "done"
     t_tts = time.time()
@@ -1637,8 +1756,8 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
         session = await get_llm_session()
         async with session.post(
             f"{LLAMA_SERVER}/v1/chat/completions",
-            json={"messages": messages, "temperature": 0.7, "max_tokens": 256,
-                  "top_p": 0.8, "top_k": 20, "min_p": 0.05,
+            json={"messages": messages, "temperature": 0.8, "max_tokens": 192,
+                  "top_p": 0.9, "top_k": 40, "min_p": 0.1,
                   "repeat_penalty": 1.1, "repeat_last_n": 64, "stream": True},
         ) as llm_resp:
             async for line in llm_resp.content:

@@ -318,7 +318,7 @@ import struct
 import select
 
 VAD_THRESHOLD = 500      # seuil RMS pour int16 (0-32767)
-SILENCE_MS = 1200        # ms de silence avant fin de phrase
+SILENCE_MS = 750         # ms de silence avant fin de phrase
 MIN_SPEECH_MS = 600      # durée minimum de parole
 SAMPLE_RATE = 16000
 CHUNK_BYTES = 4096       # ~128ms à 16kHz mono 16bit

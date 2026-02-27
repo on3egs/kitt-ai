@@ -49,9 +49,11 @@ $LLAMA_SERVER \
     --host 0.0.0.0 \
     --port 8080 \
     --n-gpu-layers 99 \
-    --ctx-size 2048 \
+    --ctx-size 1536 \
     --batch-size 512 \
-    --threads 4 \
+    --cache-type-k q8_0 \
+    --cache-type-v q8_0 \
+    --threads 6 \
     --parallel 1 \
     --flash-attn on \
     &
