@@ -2079,7 +2079,7 @@ body::after {
  text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); 
 }
 <style>
-/* FORCAGE INTERACTIVITE MAESTRO V35.7 */
+/* FORCAGE INTERACTIVITE MAESTRO V35.8 */
 .chat-area, .input-area {
   position: relative !important;
   z-index: 8000 !important;
@@ -2088,11 +2088,6 @@ body::after {
 input#input {
   pointer-events: auto !important;
   cursor: text !important;
-  z-index: 8001 !important;
-}
-button#mic, button#automic, button#send {
-  pointer-events: auto !important;
-  cursor: pointer !important;
   z-index: 8001 !important;
 }
 #intro-overlay {
@@ -2105,9 +2100,31 @@ button#mic, button#automic, button#send {
 #brain-canvas, #orb, #jarvis-bg {
   pointer-events: none !important;
 }
-/* Masquer boutons header s'ils reviennent */
-.reset-btn, .ambient-btn, .vig-btn, .night-btn, .vis-btn, .rpt-btn, .enhance-btn, .conv-btn, .dl-btn, .git-btn, .run-btn {
-  display: none !important;
+
+/* FEEDBACK VISUEL ACCENTUÉ (REBORN V35.8) */
+.mic-btn.recording {
+  background: #ff0000 !important;
+  color: white !important;
+  box-shadow: 0 0 25px #ff0000 !important;
+  border-color: #ffffff !important;
+}
+.auto-btn.active.waiting {
+  background: #00ff00 !important;
+  color: #000 !important;
+  box-shadow: 0 0 20px #00ff00 !important;
+  border-color: #ffffff !important;
+}
+.auto-btn.active.hearing {
+  background: #ff0000 !important;
+  color: #fff !important;
+  box-shadow: 0 0 30px #ff0000 !important;
+  border-color: #ffcccc !important;
+}
+.header-btns button.active {
+  background: #ff2200 !important;
+  color: white !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 15px #ff2200 !important;
 }
 </style>
 </head>
@@ -2213,9 +2230,21 @@ button#mic, button#automic, button#send {
 
 <div class="header">
   <h1>K I T T</h1>
-  <div class="subtitle">KNIGHT INDUSTRIES TWO THOUSAND &nbsp;·&nbsp; KYRONEX A.I. &mdash; V35.7</div>
+  <div class="subtitle">KNIGHT INDUSTRIES TWO THOUSAND &nbsp;·&nbsp; KYRONEX A.I. &nbsp;·&nbsp; by Manix</div>
   <div class="mother-line">MU-TH-UR 6000 &nbsp;·&nbsp; NEURAL INTERFACE ACTIVE</div>
-  <div class="header-btns"></div>
+  <div class="header-btns">
+    <button class="reset-btn" id="resetbtn" onclick="resetChat()" title="Vider l'historique KITT">RST</button>
+    <button class="vig-btn" id="vigbtn" onclick="_requireNightAuth(toggleVigilance)" title="Mode Vigilance — surveillance caméra">VIG</button>
+    <button class="ambient-btn" id="ambientbtn" onclick="_requireNightAuth(toggleAmbient)" title="Sons d'ambiance système">AMB</button>
+    <button class="night-btn" id="nightbtn" onclick="toggleNightPanel()" title="Night Scheduler — améliorations autonomes">NIGHT</button>
+    <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
+    <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
+    <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
+    <button class="conv-btn" id="convbtn" onclick="openConvAdmin()" aria-label="Archives conversations" title="Archives des conversations KITT">CONV</button>
+    <button class="dl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
+    <button class="git-btn" id="gitbtn" onclick="_requireNightAuth(gitPushHtml)" title="Pousser index.html vers GitHub">GIT</button>
+    <button class="run-btn" id="runbtn" onclick="_requireNightAuth(runImprove)" title="Lancer une amélioration autonome maintenant">RUN</button>
+  </div>
 </div>
 
 <div class="scanner-container">
@@ -2229,15 +2258,28 @@ button#mic, button#automic, button#send {
   <canvas id="voicebox" width="280" height="44"></canvas>
 </div>
 
+<div class="mobile-stats" id="mobileStats">
+  <span id="ms-online">—</span> en ligne &nbsp;·&nbsp;
+  <span id="ms-health" class="online">INIT</span>
+</div>
+
 <div class="chat-area" id="chat"></div>
 
 <div class="input-area">
-  <button class="mic-btn" id="mic" onclick="toggleMic()" ontouchend="ensurePlaybackCtx()" title="Microphone">
+  <button class="mic-btn" id="mic" onclick="toggleMic()" title="Push-to-talk">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
   </button>
-  <button class="auto-btn" id="automic" onclick="toggleAutoListen()" ontouchend="ensurePlaybackCtx()" title="Auto-écoute">AUTO</button>
-  <input type="text" id="input" placeholder="Parlez à KITT..." autofocus autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text">
-  <button id="send" onclick="sendMessage()" ontouchend="ensurePlaybackCtx()">ENVOYER</button>
+  <button class="auto-btn" id="automic" onclick="toggleAutoListen()" title="Auto-ecoute continue">AUTO</button>
+  <button class="wake-btn" id="wakemic" onclick="toggleWakeListen()" title="Wake word: dites KITT">WAKE</button>
+  <button class="cam-btn" id="cam" onclick="sendVision()" title="Vision camera">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+  </button>
+  <button class="audio-btn" id="audiobtn" onclick="activateAudio()" title="Activer le son">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+    <svg class="slash" width="20" height="20" viewBox="0 0 24 24" style="position:absolute"><line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+  </button>
+  <input type="text" id="input" placeholder="Parlez à KITT..." autofocus>
+  <button id="send" onclick="sendMessage()">ENVOYER</button>
 </div>
 
 <div class="status-bar">
@@ -5533,6 +5575,8 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     on = false;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     ov.classList.add('done');
+    ov.style.pointerEvents = 'none'; // Libérer immédiatement
+    
     // Flash "power-on moniteur" à mi-dissolve
     setTimeout(function () {
       var po = document.getElementById('poweron');
@@ -5540,7 +5584,10 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
         setTimeout(function() { po.style.display = 'none'; po.classList.remove('flash'); }, 750); }
     }, 1500);
     setTimeout(function () {
-      if (ov) ov.style.display = 'none';
+      if (ov) {
+        ov.style.display = 'none';
+        ov.remove(); // Suppression physique
+      }
       if (AC) { try { AC.close(); } catch(e){} AC = null; }
     }, 3200);
   }
