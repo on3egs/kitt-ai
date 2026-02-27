@@ -2864,6 +2864,13 @@ function getUserMediaCompat(constraints) {
 }
 
 async function toggleMic() {
+  const ctx = ensurePlaybackCtx();
+  console.log('[KYRONEX] AudioContext state:', ctx.state);
+  if (ctx.state === 'suspended') {
+    await ctx.resume();
+    console.log('[KYRONEX] AudioContext resumed:', ctx.state);
+  }
+  
   if (autoListenActive) stopAutoListen();
   if (wakeListenActive) stopWakeListen();
   if (isRecording) { stopRecording(); return; }
@@ -3174,6 +3181,9 @@ async function toggleWakeListen() {
 }
 
 async function toggleAutoListen() {
+  const ctx = ensurePlaybackCtx();
+  if (ctx.state === 'suspended') await ctx.resume();
+  
   if (isRecording) stopRecording();
   if (wakeListenActive) stopWakeListen();
   if (autoListenActive) { stopAutoListen(); return; }
