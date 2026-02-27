@@ -2054,8 +2054,8 @@ body { background: #000 !important; }
 .scanner { border-color: var(--red-neon) !important; box-shadow: 0 0 20px var(--red-glow) !important; }
 button { border: 1px solid var(--red-neon) !important; background: rgba(20,0,0,0.8) !important; color: var(--red-neon) !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 2px !important; }
 button:hover { background: var(--red-neon) !important; color: #000 !important; box-shadow: 0 0 30px var(--red-neon) !important; }
-/* Masquer boutons header superflus */
-.reset-btn, .ambient-btn, .vig-btn, .night-btn, .vis-btn, .rpt-btn, .enhance-btn, .conv-btn { display: none !important; }
+/* Masquer boutons header superflus et boutons input zone */
+.reset-btn, .ambient-btn, .vig-btn, .night-btn, .vis-btn, .rpt-btn, .enhance-btn, .conv-btn, .wake-btn, .cam-btn, .audio-btn { display: none !important; }
 </style>
 /* V35.0 - CINEMATIC CRT OVERLAY */ 
 body::after { 
@@ -2254,6 +2254,10 @@ const micBtn = document.getElementById('mic');
 const autoBtn = document.getElementById('automic');
 const wakeBtn = document.getElementById('wakemic');
 
+// Desactivated buttons (UI Cleanup)
+const camBtn = document.getElementById('cam');
+const audioBtn = document.getElementById('audiobtn');
+
 // Auto-listen state
 let autoListenActive = false;
 let autoStream = null;
@@ -2433,8 +2437,10 @@ async function sendVision() {
   addMessage(msg, 'user');
   input.value = '';
   sendBtn.disabled = true;
-  camBtn.disabled = true;
-  camBtn.classList.add('capturing');
+  if (camBtn) {
+    camBtn.disabled = true;
+    camBtn.classList.add('capturing');
+  }
   statusEl.innerHTML = `<span class="online">${_t('camera_capture')}</span>`;
 
   const div = document.createElement('div');
@@ -2505,8 +2511,10 @@ async function sendVision() {
     div.innerHTML = 'Erreur de connexion au serveur.';
   }
   stopThinkingLoop();
-  camBtn.classList.remove('capturing');
-  camBtn.disabled = false;
+  if (camBtn) {
+    camBtn.classList.remove('capturing');
+    camBtn.disabled = false;
+  }
   sendBtn.disabled = false;
   input.focus();
 }
@@ -2915,7 +2923,7 @@ function stopWakeListen() {
   if (wakeProcessor) wakeProcessor.disconnect();
   if (wakeStream) wakeStream.getTracks().forEach(t => t.stop());
   if (wakeContext) wakeContext.close();
-  wakeBtn.classList.remove('active', 'waiting', 'hearing', 'transcribing', 'wake-triggered');
+  if (wakeBtn) wakeBtn.classList.remove('active', 'waiting', 'hearing', 'transcribing', 'wake-triggered');
   scanner.classList.remove('wake-listening', 'wake-hearing', 'wake-triggered');
   statusEl.innerHTML = '<span class="online">Wake word arrete</span>';
 }
@@ -2927,10 +2935,10 @@ function resumeWakeListening() {
   wakeProcessing = false;
   wakeAwaitingCommand = false;
   if (wakeCommandTimeout) { clearTimeout(wakeCommandTimeout); wakeCommandTimeout = null; }
-  wakeBtn.classList.remove('hearing', 'transcribing', 'wake-triggered');
+  if (wakeBtn) wakeBtn.classList.remove('hearing', 'transcribing', 'wake-triggered');
   scanner.classList.remove('wake-hearing', 'wake-triggered');
   if (wakeListenActive) {
-    wakeBtn.classList.add('active', 'waiting');
+    if (wakeBtn) wakeBtn.classList.add('active', 'waiting');
     scanner.classList.add('wake-listening');
     statusEl.innerHTML = `<span class="online">${_t('wake_waiting')}</span>`;
   }
@@ -2939,8 +2947,8 @@ function resumeWakeListening() {
 async function processWakeSpeech() {
   if (wakePcmChunks.length === 0) return;
   wakeProcessing = true;
-  wakeBtn.classList.remove('hearing');
-  wakeBtn.classList.add('transcribing');
+  if (wakeBtn) wakeBtn.classList.remove('hearing');
+  if (wakeBtn) wakeBtn.classList.add('transcribing');
   scanner.classList.remove('wake-hearing');
 
   const chunks = wakePcmChunks.slice();
@@ -2963,7 +2971,7 @@ async function processWakeSpeech() {
       // We were waiting for a command after "KYRONEX" alone
       wakeAwaitingCommand = false;
       if (wakeCommandTimeout) { clearTimeout(wakeCommandTimeout); wakeCommandTimeout = null; }
-      wakeBtn.classList.remove('transcribing', 'wake-triggered');
+      if (wakeBtn) wakeBtn.classList.remove('transcribing', 'wake-triggered');
       scanner.classList.remove('wake-triggered');
       addMessage(text, 'user');
       sendBtn.disabled = true;
@@ -2984,7 +2992,7 @@ async function processWakeSpeech() {
 
     if (command.length > 0) {
       // "KYRONEX quelle heure est-il" → chat with command
-      wakeBtn.classList.remove('transcribing');
+      if (wakeBtn) wakeBtn.classList.remove('transcribing');
       addMessage(command, 'user');
       sendBtn.disabled = true;
       await streamChat(command, data.language || '');
@@ -2995,8 +3003,8 @@ async function processWakeSpeech() {
 
     // "KYRONEX" alone → triggered state, wait for follow-up command (6s)
     wakeAwaitingCommand = true;
-    wakeBtn.classList.remove('transcribing');
-    wakeBtn.classList.add('wake-triggered');
+    if (wakeBtn) wakeBtn.classList.remove('transcribing');
+    if (wakeBtn) wakeBtn.classList.add('wake-triggered');
     scanner.classList.add('wake-triggered');
     statusEl.innerHTML = `<span class="online">${_t('wake_detected')}</span>`;
     wakeProcessing = false;
@@ -3052,8 +3060,8 @@ async function toggleWakeListen() {
           wakeIsSpeaking = true;
           wakeSpeechStart = now;
           wakePcmChunks = [];
-          wakeBtn.classList.remove('waiting', 'wake-triggered');
-          wakeBtn.classList.add('hearing');
+          if (wakeBtn) wakeBtn.classList.remove('waiting', 'wake-triggered');
+          if (wakeBtn) wakeBtn.classList.add('hearing');
           scanner.classList.remove('wake-listening', 'wake-triggered');
           scanner.classList.add('wake-hearing');
           if (!wakeAwaitingCommand) {
@@ -3073,13 +3081,13 @@ async function toggleWakeListen() {
             processWakeSpeech();
           } else {
             wakePcmChunks = [];
-            wakeBtn.classList.remove('hearing');
+            if (wakeBtn) wakeBtn.classList.remove('hearing');
             if (wakeAwaitingCommand) {
-              wakeBtn.classList.add('wake-triggered');
+              if (wakeBtn) wakeBtn.classList.add('wake-triggered');
               scanner.classList.remove('wake-hearing');
               scanner.classList.add('wake-triggered');
             } else {
-              wakeBtn.classList.add('waiting');
+              if (wakeBtn) wakeBtn.classList.add('waiting');
               scanner.classList.remove('wake-hearing');
               scanner.classList.add('wake-listening');
               statusEl.innerHTML = `<span class="online">${_t('wake_waiting')}</span>`;
@@ -3093,7 +3101,7 @@ async function toggleWakeListen() {
     wakeProcessor.connect(wakeContext.destination);
 
     wakeListenActive = true;
-    wakeBtn.classList.add('active', 'waiting');
+    if (wakeBtn) wakeBtn.classList.add('active', 'waiting');
     scanner.classList.add('wake-listening');
     statusEl.innerHTML = `<span class="online">${_t('wake_waiting')}</span>`;
   } catch (e) {
@@ -3191,7 +3199,7 @@ function activateAudio() {
   src.connect(ctx.destination);
   src.start(0);
   audioActivated = true;
-  audioBtn.classList.add('active');
+  if (audioBtn) audioBtn.classList.add('active');
 }
 
 // Auto-detect audio state on interactions
