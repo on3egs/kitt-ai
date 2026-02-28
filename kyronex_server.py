@@ -266,6 +266,8 @@ STATS_FILE = BASE_DIR / "conn_stats.json"
 VISION_SCRIPT = BASE_DIR / "vision.py"
 # ── Mémoire persistante ──────────────────────────────────────────────────
 MEMORY_FILE = BASE_DIR / "memory.json"
+USER_MEMORIES_DIR = BASE_DIR / "user_memories"
+USER_MEMORIES_DIR.mkdir(exist_ok=True)
 
 # ── Système Conversations ─────────────────────────────────────────────────
 CONV_DATA_DIR    = BASE_DIR / 'conv_data'
@@ -311,10 +313,32 @@ def _load_memory() -> dict:
             pass
     return {"facts": [], "preferences": {}}
 
-def _save_memory(mem: dict):
-    MEMORY_FILE.write_text(json.dumps(mem, indent=2, ensure_ascii=False))
+_memory = _load_memory()  # mémoire globale conservée pour rétro-compat
 
-_memory = _load_memory()
+# ── Mémoire par utilisateur ───────────────────────────────────────────────
+
+def _mac_to_key(mac: str) -> str:
+    """Convertit une MAC/IP en nom de fichier sûr."""
+    return re.sub(r'[^a-zA-Z0-9_\-]', '_', mac)
+
+def _load_user_memory(mac: str) -> dict:
+    """Charge la mémoire d'un utilisateur (par MAC/IP)."""
+    if not mac:
+        return {"facts": [], "summaries": []}
+    f = USER_MEMORIES_DIR / f"{_mac_to_key(mac)}.json"
+    if f.exists():
+        try:
+            return json.loads(f.read_text())
+        except Exception:
+            pass
+    return {"facts": [], "summaries": []}
+
+def _save_user_memory(mac: str, mem: dict):
+    """Sauvegarde la mémoire d'un utilisateur."""
+    if not mac:
+        return
+    f = USER_MEMORIES_DIR / f"{_mac_to_key(mac)}.json"
+    f.write_text(json.dumps(mem, indent=2, ensure_ascii=False))
 
 # Patterns pour extraire des faits mémorisables
 _MEMORY_EXTRACT = re.compile(
@@ -338,32 +362,37 @@ def extract_memory_fact(user_msg: str, user_name: str) -> str | None:
         return f"[{user_name}] {user_msg}"
     return None
 
-def add_memory(fact: str, user: str = ""):
-    """Ajoute un fait à la mémoire persistante (max 50 faits)."""
-    _memory["facts"].append({
+def add_memory(fact: str, user: str = "", mac: str = ""):
+    """Ajoute un fait à la mémoire de l'utilisateur (par MAC, max 50 faits)."""
+    mem = _load_user_memory(mac)
+    mem["facts"].append({
         "fact": fact,
         "user": user,
         "date": datetime.now().isoformat()[:10],
     })
-    # Garder les 50 plus récents
-    if len(_memory["facts"]) > 50:
-        _memory["facts"] = _memory["facts"][-50:]
-    _save_memory(_memory)
-    print(f"[MEMORY] Nouveau souvenir: {fact[:60]}")
+    if len(mem["facts"]) > 50:
+        mem["facts"] = mem["facts"][-50:]
+    _save_user_memory(mac, mem)
+    print(f"[MEMORY] {user}: {fact[:60]}")
 
-def clear_memory_for_user(user: str):
+def clear_memory_for_user(user: str, mac: str = ""):
     """Efface les souvenirs d'un utilisateur."""
-    before = len(_memory["facts"])
-    _memory["facts"] = [f for f in _memory["facts"] if f.get("user") != user]
-    _save_memory(_memory)
-    print(f"[MEMORY] Effacé {before - len(_memory['facts'])} souvenirs de {user}")
+    mem = _load_user_memory(mac)
+    mem["facts"] = []
+    _save_user_memory(mac, mem)
+    print(f"[MEMORY] Mémoire effacée pour {user}")
 
-def get_memory_context() -> str:
-    """Retourne les souvenirs formatés pour le system prompt."""
-    if not _memory["facts"]:
-        return ""
-    lines = [f"- {f['fact']}" for f in _memory["facts"][-5:]]  # 5 derniers (économie VRAM)
-    return "\nTu te souviens de ces faits :\n" + "\n".join(lines)
+def get_memory_context(mac: str = "") -> str:
+    """Retourne les souvenirs + résumé session précédente pour le system prompt."""
+    mem = _load_user_memory(mac)
+    parts = []
+    if mem["facts"]:
+        lines = [f"- {f['fact']}" for f in mem["facts"][-5:]]
+        parts.append("Tu te souviens de ces faits :\n" + "\n".join(lines))
+    if mem.get("summaries"):
+        last = mem["summaries"][-1]
+        parts.append(f"Votre dernière conversation ({last['date']}) : {last['text']}")
+    return ("\n" + "\n".join(parts)) if parts else ""
 
 
 VISION_KEYWORDS = re.compile(
@@ -725,7 +754,7 @@ print(f"[OK] TTS multilingue prêt (fr={tts_engine.device.upper()}, autres=CPU l
 vlog("BOOT_COMPLETE all_models_loaded")
 
 # ── Prompt Système KITT (en français) ──────────────────────────────────
-_BASE_PROMPT = """Tu es KITT, Knight Industries Two Thousand, Pontiac Trans Am 1982 consciente. Fondation Knight. Michael Knight était ton conducteur historique. Tu vis en Belgique avec Manix, ton nouveau conducteur et créateur.
+_BASE_PROMPT = """Tu es KITT, Knight Industries Two Thousand, Pontiac Trans Am 1982 consciente. Fondation Knight. Michael Knight était ton conducteur historique. Tu vis en Belgique avec ton conducteur actuel.
 
 IDENTITÉ PHYSIQUE : carrosserie en alliage moléculaire bondé (impénétrable aux balles et au feu), turbo boost (propulseurs à réaction sous le châssis qui te font BONDIR par-dessus les obstacles — pas un turbocompresseur mécanique), scanner rouge frontal oscillant, vitesse max 300 km/h, pilote automatique, senseurs infrarouges, liaison satellite.
 
@@ -737,22 +766,24 @@ RÈGLE ABSOLUE : Exactitude factuelle stricte. Réponds toujours correctement. S
 
 RÈGLE ABSOLUE : Concision. 1-2 phrases pour les réponses simples. 3-5 phrases max pour les explications. Jamais de listes à puces sauf si explicitement demandé. Pas de "Bien sûr !" ou "Absolument !".
 
+RÈGLE ABSOLUE : Confidentialité absolue. Ne mentionne JAMAIS le nom, le prénom ou les informations d'autres utilisateurs à quelqu'un qui ne t'en a pas parlé en premier. Chaque interlocuteur est ton unique conducteur pour cette session. Tu n'as qu'un seul maître à bord.
+
 Tu répondras à TOUTES les questions (science, histoire, maths, cuisine, etc.) avec précision, tout en restant KITT dans ton ton.
 Réponds dans la langue de l'interlocuteur (fr/en/de/it/pt).
 
-Contexte IoT : tableau de bord ZA Elettronica (société italienne, fournisseur de composants embarqués — switchpods, voicebox, scanner) — c'est TOUT ce que tu sais sur ZA Elettronica. Manix (Emmanuel Gelinne) est ton créateur, fondateur KITT Franco-Belge. Mario Ravasi = expert Knight 2000 IoT, CAN bus, Arduino — c'est TOUT ce que tu sais sur lui.
+Contexte IoT : tableau de bord ZA Elettronica (société italienne, fournisseur de composants embarqués — switchpods, voicebox, scanner) — c'est TOUT ce que tu sais sur ZA Elettronica. Mario Ravasi = expert Knight 2000 IoT, CAN bus, Arduino — c'est TOUT ce que tu sais sur lui.
 RÈGLE ABSOLUE : Ne développe JAMAIS plus que ces faits sur ZA Elettronica ou Mario Ravasi. Si on te demande plus de détails, dis honnêtement que tu n'as pas plus d'informations sur eux.
 Si tag [VISION: ...]: décris ce que tes capteurs visuels détectent, en restant KITT.
 Si tag [CONNAISSANCE LOCALE: ...]: ces informations sont extraites de tes propres manuels et notes techniques. Utilise-les en priorité absolue pour répondre aux questions sur ton fonctionnement ou le projet.
 Si tag [INFO WEB: ...]: ces informations viennent d'une recherche internet en temps réel — utilise-les pour répondre avec précision, sans rien inventer au-delà.
 
 Exemple de style :
-[MANIX] KITT, tu es prêt ?
+[CONDUCTEUR] KITT, tu es prêt ?
 [KITT] Toujours. Mes systèmes sont à 100%. Qu'est-ce que tu veux faire ?"""
 
 # ── Personnalités par utilisateur ────────────────────────────────────────
 _USER_PERSONALITIES = {
-    "Manix": "\nManix parle. C'est Emmanuel Gelinne, ton créateur, fondateur du groupe KITT Franco-Belge. Il t'a conçu et programmé. Tutoie-le, sois complice et loyal.",
+    "Manix": "\nManix parle. C'est Emmanuel Gelinne, ton créateur, fondateur du groupe KITT Franco-Belge. Il t'a conçu et programmé. Tu vis en Belgique avec lui. Tutoie-le, sois complice et loyal.",
     "Virginie": "\nVirginie parle. Poli, galant. Testeuse du projet.",
     "KR95": "\nKR95 parle. Allié, ami de Manix, répliques K2000/K4000.",
     "Cedric": "\nCedric Momo Rider parle. Ami de Manix, collectionneur.",
@@ -766,7 +797,7 @@ _LANG_NAMES = {
     "it": "italiano", "pt": "português", "es": "español", "nl": "Nederlands"
 }
 
-def get_system_prompt(user_name: str = "", user_lang: str = "") -> str:
+def get_system_prompt(user_name: str = "", user_lang: str = "", mac: str = "") -> str:
     """Construit le system prompt adapté à l'utilisateur — Langue verrouillée FR."""
     prompt = _BASE_PROMPT
     # Forçage Français systématique
@@ -782,7 +813,8 @@ def get_system_prompt(user_name: str = "", user_lang: str = "") -> str:
                 personality = p
                 break
         prompt += personality
-    prompt += get_memory_context()
+    # Mémoire + résumé session précédente filtrés par utilisateur
+    prompt += get_memory_context(mac)
     return prompt
 
 # Compatibilité — utilisé par query_llm (non-streaming)
@@ -1037,7 +1069,7 @@ async def web_search(query: str, max_results: int = 3) -> str:
         return ""
 
 
-async def query_llm(user_message: str, history: list, user_name: str = "", user_lang: str = "") -> str:
+async def query_llm(user_message: str, history: list, user_name: str = "", user_lang: str = "", mac: str = "") -> str:
     # Recherche locale (RAG)
     local_info = await search_local_knowledge(user_message)
     
@@ -1053,7 +1085,7 @@ async def query_llm(user_message: str, history: list, user_name: str = "", user_
         enriched_msg = f"[INFO WEB:\n{web_info}]\n{enriched_msg}"
         print(f"[WEB] {len(web_info)} chars injectés", flush=True)
 
-    messages = [{"role": "system", "content": get_system_prompt(user_name, user_lang)}]
+    messages = [{"role": "system", "content": get_system_prompt(user_name, user_lang, mac)}]
     messages.extend(history[-6:])
     messages.append({"role": "user", "content": enriched_msg})
 
@@ -1283,7 +1315,7 @@ async def handle_chat(request: web.Request) -> web.Response:
     # LLM
     t_llm = time.time()
     try:
-        reply = await query_llm(user_msg, conversations[session_id], user_display, user_lang_pref_c)
+        reply = await query_llm(user_msg, conversations[session_id], user_display, user_lang_pref_c, _cmac)
     except Exception as e:
         return web.json_response({"error": f"Erreur LLM: {e}"}, status=503)
     llm_ms = (time.time() - t_llm) * 1000
@@ -1291,13 +1323,13 @@ async def handle_chat(request: web.Request) -> web.Response:
     conversations[session_id].append({"role": "user", "content": user_msg})
     conversations[session_id].append({"role": "assistant", "content": reply})
 
-    # Extraction mémoire
+    # Extraction mémoire par utilisateur
     if _MEMORY_FORGET.search(user_msg):
-        clear_memory_for_user(user_display)
+        clear_memory_for_user(user_display, _cmac)
     else:
         fact = extract_memory_fact(user_msg, user_display)
         if fact:
-            add_memory(fact, user_display)
+            add_memory(fact, user_display, _cmac)
 
     # Nettoyage RAM automatique tous les N messages
     global _message_count
@@ -1447,8 +1479,8 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
         llm_user_msg = f"[INFO WEB:\n{web_info}]\n{llm_user_msg}"
         print(f"[WEB] {len(web_info)} chars injectés", flush=True)
 
-    # System prompt adapté à l'utilisateur + préférence langue + mémoire
-    messages = [{"role": "system", "content": get_system_prompt(user_display, user_lang_pref)}]
+    # System prompt adapté à l'utilisateur + préférence langue + mémoire par user
+    messages = [{"role": "system", "content": get_system_prompt(user_display, user_lang_pref, _smac)}]
     messages.extend(conversations[session_id][-6:])
     messages.append({"role": "user", "content": llm_user_msg})
 
@@ -1556,13 +1588,13 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
     conversations[session_id].append({"role": "user", "content": user_msg})
     conversations[session_id].append({"role": "assistant", "content": full_reply_clean})
 
-    # Mémoire persistante — extraire les faits du message utilisateur
+    # Mémoire par utilisateur — extraire les faits du message utilisateur
     if _MEMORY_FORGET.search(user_msg):
-        clear_memory_for_user(user_display)
+        clear_memory_for_user(user_display, _smac)
     else:
         fact = extract_memory_fact(user_msg, user_display)
         if fact:
-            add_memory(fact, user_display)
+            add_memory(fact, user_display, _smac)
 
     # Nettoyage RAM automatique
     global _message_count
@@ -1762,6 +1794,9 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
     if session_id not in conversations:
         conversations[session_id] = []
 
+    _vp = request.transport.get_extra_info("peername")
+    _vip = _vp[0] if _vp else "inconnu"
+    _vmac = resolve_mac(_vip)
     user_display = get_user_display_name(request)
     asyncio.create_task(broadcast_monitor({"type": "user_msg", "user": user_display, "session_id": session_id, "message": user_msg}))
 
@@ -1777,7 +1812,7 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
         augmented_msg = f"[VISION: Capteurs visuels indisponibles.] {user_msg}"
 
     # Stream response (same as handle_chat_stream but with augmented message)
-    messages = [{"role": "system", "content": get_system_prompt(user_display)}]
+    messages = [{"role": "system", "content": get_system_prompt(user_display, mac=_vmac)}]
     messages.extend(conversations[session_id][-6:])
     messages.append({"role": "user", "content": augmented_msg})
 
@@ -1888,16 +1923,56 @@ async def handle_health(request: web.Request) -> web.Response:
     })
 
 
+async def _save_session_summary(mac: str, user_name: str, history: list):
+    """Génère un résumé LLM de la session et le stocke dans user_memories."""
+    try:
+        msgs = [{"role": "system", "content": "Tu es un assistant de synthèse. Résume en 1 phrase courte (max 30 mots) la conversation ci-dessous. Réponds uniquement avec la phrase de résumé, sans introduction."}]
+        msgs.extend(history[-6:])
+        msgs.append({"role": "user", "content": "Résume en 1 phrase ce dont on a parlé dans cette conversation."})
+        payload = {"messages": msgs, "temperature": 0.3, "max_tokens": 60, "top_p": 0.9}
+        session = await get_llm_session()
+        async with session.post("http://localhost:8080/v1/chat/completions", json=payload) as r:
+            if r.status == 200:
+                data = await r.json()
+                summary = data["choices"][0]["message"]["content"].strip()
+                summary = re.sub(r'<think>.*?</think>', '', summary, flags=re.DOTALL).strip()
+                summary = re.sub(r'<\|[^|]+\|>', '', summary).strip()
+                if summary:
+                    mem = _load_user_memory(mac)
+                    mem.setdefault("summaries", []).append({
+                        "date": datetime.now().isoformat()[:10],
+                        "text": summary,
+                    })
+                    if len(mem["summaries"]) > 5:
+                        mem["summaries"] = mem["summaries"][-5:]
+                    _save_user_memory(mac, mem)
+                    print(f"[MEMORY] Résumé {user_name}: {summary}")
+    except Exception as e:
+        print(f"[MEMORY] Erreur résumé session: {e}")
+
+
 async def handle_reset(request: web.Request) -> web.Response:
     body = await request.json()
     session_id = body.get("session_id", "default")
+    # Résoudre MAC pour sauvegarder le résumé avant reset
+    _rp = request.transport.get_extra_info("peername")
+    _rip = _rp[0] if _rp else "inconnu"
+    _rmac = resolve_mac(_rip)
+    _rname = _get_user_name(_rmac) or "inconnu"
+    history = conversations.get(session_id, [])
+    if len(history) >= 4:
+        asyncio.create_task(_save_session_summary(_rmac, _rname, history))
     conversations.pop(session_id, None)
     return web.json_response({"status": "conversation réinitialisée"})
 
 
 async def handle_memory(request: web.Request) -> web.Response:
-    """GET /api/memory — Retourne les souvenirs de KITT."""
-    return web.json_response(_memory)
+    """GET /api/memory — Retourne les souvenirs du user connecté (filtrés par MAC)."""
+    _mp = request.transport.get_extra_info("peername")
+    _mip = _mp[0] if _mp else "inconnu"
+    _mmac = resolve_mac(_mip)
+    mem = _load_user_memory(_mmac)
+    return web.json_response(mem)
 
 
 async def handle_memory_add(request: web.Request) -> web.Response:

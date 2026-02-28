@@ -3715,12 +3715,19 @@ async function _refreshMemory() {
     const res = await fetch('/api/memory');
     const d   = await res.json();
     const el  = document.getElementById('mp-memory-list');
-    if (!el || !d.facts) return;
-    const recent = (d.facts || []).slice(-5).reverse();
-    el.innerHTML = recent.map(f =>
-      `<div class="mp-mem-item">${f.fact.slice(0,55)}${f.fact.length>55?'&hellip;':''}<br>
-       <span class="mp-mem-user">${(f.user||'?').toUpperCase()}</span></div>`
+    if (!el) return;
+    let html = '';
+    const facts = (d.facts || []).slice(-5).reverse();
+    html += facts.map(f =>
+      `<div class="mp-mem-item">${f.fact.slice(0,55)}${f.fact.length>55?'&hellip;':''}</div>`
     ).join('') || '<div class="mp-mem-user">AUCUN FAIT</div>';
+    const summaries = (d.summaries || []).slice(-1);
+    if (summaries.length) {
+      const s = summaries[0];
+      html += `<div class="mp-sep"></div><div class="mp-mem-title">&#9632; SESSION PRECEDENTE</div>
+        <div class="mp-mem-item" style="font-style:italic;opacity:0.8;">${s.date} — ${s.text.slice(0,70)}${s.text.length>70?'&hellip;':''}</div>`;
+    }
+    el.innerHTML = html;
   } catch(e) {}
 }
 _refreshMemory();
@@ -4616,6 +4623,8 @@ connectProactive();
     <div class="mp-mem-title">&#9632; MEMOIRE ACTIVE</div>
     <div id="mp-memory-list"></div>
     <div class="mp-sep"></div>
+    <!-- SESSION PRECEDENTE injectée dynamiquement dans mp-memory-list via JS -->
+
     <div class="mp-mem-title">&#9632; DOCS PDF</div>
     <div id="mp-pdf-list"></div>
     <div class="mp-sep"></div>
