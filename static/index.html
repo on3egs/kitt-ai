@@ -2325,7 +2325,7 @@ button       { pointer-events: auto; cursor: pointer; }
   <!-- cam et audio masqués — JS préservé, boutons invisibles -->
   <button class="cam-btn" id="cam" onclick="sendVision()" aria-hidden="true"></button>
   <button class="audio-btn" id="audiobtn" onclick="activateAudio()" aria-hidden="true"></button>
-  <input type="text" id="input" placeholder="Parlez à KITT..." autofocus enterkeyhint="send" inputmode="text">
+  <input type="text" id="input" placeholder="Parlez à KITT..." enterkeyhint="send" inputmode="text">
   <button id="send" onclick="sendMessage()" aria-hidden="true"></button>
 </div>
 
@@ -2508,7 +2508,7 @@ async function streamChat(msg, detectedLang) {
   stopThinkingLoop();
   sendBtn.disabled = false;
   sendBtn.classList.remove('sending');
-  input.focus();
+  _focusInput();
 }
 
 function _waitForAudioDone(div, fullText, timingHtml) {
@@ -2604,7 +2604,7 @@ async function sendVision() {
   camBtn.classList.remove('capturing');
   camBtn.disabled = false;
   sendBtn.disabled = false;
-  input.focus();
+  _focusInput();
 }
 
 let playbackCtx = null;
@@ -3468,6 +3468,11 @@ function selectLang(lang) {
   });
 })();
 
+// Focus uniquement sur desktop (pointer:fine = souris) — évite d'ouvrir le clavier mobile
+function _focusInput() {
+  if (window.matchMedia('(pointer: fine)').matches) input.focus();
+}
+
 function lockUI() {
   _brain.setState('thinking');
   input.disabled = true;
@@ -3492,7 +3497,7 @@ function unlockUI(name, lang) {
     nl: 'Spreek met KITT...',
   };
   input.placeholder = PLACEHOLDERS[lang || _preferredLang] || PLACEHOLDERS.fr;
-  input.focus();
+  _focusInput();
   _loadChatHistory();
   _applyUILang(_preferredLang);
   // Salutation KITT avec vraie voix (TTS) — streamChat sans message user visible
