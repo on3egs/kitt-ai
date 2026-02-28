@@ -1611,15 +1611,30 @@ async def handle_stt(request: web.Request) -> web.Response:
         f.write(audio_data)
         tmp_path = f.name
 
+    # Option 1 : forcer la langue préférée de l'utilisateur dans Whisper
+    peername = request.transport.get_extra_info("peername")
+    _ip = peername[0] if peername else "inconnu"
+    _mac = resolve_mac(_ip)
+    user_lang = _get_user_lang(_mac) or "fr"  # défaut: français
+
     t0 = time.time()
     try:
         vlog("STT_START")
-        # Convertir en WAV avec ffmpeg si nécessaire, puis transcrire
-        segments, info = whisper_model.transcribe(tmp_path, language=None, beam_size=2, vad_filter=True)
+        segments, info = whisper_model.transcribe(tmp_path, language=user_lang, beam_size=2, vad_filter=True)
         text = " ".join(seg.text.strip() for seg in segments).strip()
         stt_ms = (time.time() - t0) * 1000
-        vlog(f"STT_DONE {stt_ms:.0f}ms")
-        print(f"[STT] {stt_ms:.0f}ms | {text[:80]}")
+
+        # Option 3 : si confiance faible et langue par défaut, retry en fr
+        if not _get_user_lang(_mac) and info.language_probability < 0.75 and info.language != "fr":
+            print(f"[STT] Confiance faible ({info.language_probability:.2f}, detecte={info.language}), retry fr")
+            segs2, info2 = whisper_model.transcribe(tmp_path, language="fr", beam_size=2, vad_filter=True)
+            text2 = " ".join(seg.text.strip() for seg in segs2).strip()
+            if text2:
+                text, info = text2, info2
+            stt_ms = (time.time() - t0) * 1000
+
+        vlog(f"STT_DONE {stt_ms:.0f}ms lang={info.language}({info.language_probability:.2f})")
+        print(f"[STT] {stt_ms:.0f}ms | lang={info.language}({info.language_probability:.2f}) | {text[:80]}")
     except Exception as e:
         vlog(f"STT_ERROR {e}")
         os.unlink(tmp_path)

@@ -3481,6 +3481,8 @@ function selectLang(lang) {
     b.classList.toggle('selected', b.dataset.lang === lang);
   });
   _applyUILang(lang);
+  // Persister la langue côté serveur (utilisée par Whisper STT)
+  fetch('/api/set-lang', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({lang}) }).catch(()=>{});
   console.log('[KYRONEX · LANG] Préférence sélectionnée:', lang);
 }
 // Initialiser le sélecteur avec la langue sauvegardée
