@@ -739,13 +739,13 @@ print("[...] Chargement du modèle Whisper...", flush=True)
 try:
     import ctranslate2
     if ctranslate2.get_cuda_device_count() > 0:
-        whisper_model = WhisperModel("base", device="cuda", compute_type="float16")
-        print("[OK] Whisper prêt (GPU CUDA float16)", flush=True)
+        whisper_model = WhisperModel("small", device="cuda", compute_type="float16")
+        print("[OK] Whisper prêt (GPU CUDA float16 - small)", flush=True)
     else:
         raise RuntimeError("No CUDA device")
 except Exception:
-    whisper_model = WhisperModel("base", device="cpu", compute_type="int8")
-    print("[OK] Whisper prêt (CPU int8 fallback)", flush=True)
+    whisper_model = WhisperModel("small", device="cpu", compute_type="float32")
+    print("[OK] Whisper prêt (CPU float32 fallback - small)", flush=True)
 
 # ── TTS Multilingue (fr CUDA permanent + autres langues CPU lazy) ────────
 print("[...] Chargement du modèle TTS (multilingue)...", flush=True)
@@ -1728,7 +1728,7 @@ async def handle_stt(request: web.Request) -> web.Response:
         return web.json_response({"error": "Pas d'audio reçu"}, status=400)
 
     # Sauvegarder temporairement le fichier audio
-    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as f:
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
         f.write(audio_data)
         tmp_path = f.name
 
@@ -1741,14 +1741,28 @@ async def handle_stt(request: web.Request) -> web.Response:
     t0 = time.time()
     try:
         vlog("STT_START")
-        segments, info = whisper_model.transcribe(tmp_path, language=user_lang, beam_size=2, vad_filter=True)
+        segments, info = whisper_model.transcribe(
+            tmp_path,
+            language=user_lang,
+            beam_size=5,
+            vad_filter=True,
+            temperature=0,
+            condition_on_previous_text=False,
+        )
         text = " ".join(seg.text.strip() for seg in segments).strip()
         stt_ms = (time.time() - t0) * 1000
 
         # Option 3 : si confiance faible et langue par défaut, retry en fr
         if not _get_user_lang(_mac) and info.language_probability < 0.75 and info.language != "fr":
             print(f"[STT] Confiance faible ({info.language_probability:.2f}, detecte={info.language}), retry fr")
-            segs2, info2 = whisper_model.transcribe(tmp_path, language="fr", beam_size=2, vad_filter=True)
+            segs2, info2 = whisper_model.transcribe(
+                tmp_path,
+                language="fr",
+                beam_size=5,
+                vad_filter=True,
+                temperature=0,
+                condition_on_previous_text=False,
+            )
             text2 = " ".join(seg.text.strip() for seg in segs2).strip()
             if text2:
                 text, info = text2, info2

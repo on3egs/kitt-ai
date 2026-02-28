@@ -2415,7 +2415,7 @@ let autoPcmChunks = [];
 let isSpeaking = false;
 let silenceStart = 0;
 const VAD_THRESHOLD = 0.015;
-const SILENCE_DURATION = 750;
+const SILENCE_DURATION = 1000;
 const MIN_SPEECH_DURATION = 600;
 let speechStart = 0;
 let autoProcessing = false;
@@ -2942,7 +2942,7 @@ async function toggleMic() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
 
     micContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = micContext.createMediaStreamSource(micStream);
@@ -3167,7 +3167,7 @@ async function toggleWakeListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
 
     wakeContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = wakeContext.createMediaStreamSource(wakeStream);
@@ -3252,7 +3252,7 @@ async function toggleAutoListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
 
     autoContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = autoContext.createMediaStreamSource(autoStream);
