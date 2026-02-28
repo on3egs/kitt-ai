@@ -1024,16 +1024,16 @@ async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
     keywords = [w.lower() for w in re.findall(r'\w{4,}', query) if len(w) > 3]
     if not keywords:
         return ""
-    # Seuil adaptatif : 1 mot suffit si la query est courte (nom propre, question directe)
-    min_score = 1 if len(query.split()) <= 6 else 2
 
     module_hits = []
     doc_hits = []
     for fn, content in _knowledge_cache.items():
         content_lower = content.lower()
         score = sum(1 for k in keywords if k in content_lower)
+        # Modules thématiques : seuil 1 (ciblés, peu de faux positifs)
+        # Docs racine volumineuses : seuil 2 (CLAUDE.md, GEMINI.md, etc.)
+        min_score = 1 if fn.startswith("module_") else 2
         if score >= min_score:
-            # Les modules knowledge/ ont priorité absolue sur les docs racine
             if fn.startswith("module_"):
                 module_hits.append((score, fn, content))
             else:
@@ -1043,7 +1043,13 @@ async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
     if not hits:
         return ""
 
-    hits.sort(key=lambda x: x[0], reverse=True)
+    # Tri : score décroissant, puis score secondaire = mots-clés dans le nom du fichier (matching partiel)
+    def sort_key(hit):
+        score, fn, _ = hit
+        fn_lower = fn.lower()
+        name_score = sum(1 for k in keywords if k in fn_lower or fn_lower.find(k[:5]) >= 0)
+        return (score, name_score)
+    hits.sort(key=sort_key, reverse=True)
     best_fn, best_content = hits[0][1], hits[0][2]
 
     # Extraire le(s) paragraphe(s) les plus pertinents plutôt que les N premiers chars
