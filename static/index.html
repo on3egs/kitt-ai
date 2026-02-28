@@ -2169,11 +2169,33 @@ button       { pointer-events: auto; cursor: pointer; }
 /* Voicebox dans le header */
 .voicebox-container { display: flex; justify-content: center; margin-bottom: 5px; }
 
+/* ── Bouton quitter plein écran (×) ── */
+#fsbtn {
+  display: none;
+  position: fixed;
+  top: 10px; right: 12px;
+  z-index: 9998;
+  background: rgba(6,0,0,0.85);
+  border: 1px solid var(--c-red-dim);
+  color: var(--c-red-main);
+  font-size: 1em;
+  line-height: 1;
+  width: 26px; height: 26px;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all var(--t-fast);
+  font-family: var(--font-mono);
+  -webkit-tap-highlight-color: transparent;
+}
+#fsbtn:hover { border-color: var(--c-red-hot); color: var(--c-red-hot); box-shadow: 0 0 10px var(--c-red-glow); }
+
 </style>
 </head>
 <body>
 <div id="poweron" aria-hidden="true"></div>
 <canvas id="brain-canvas" aria-hidden="true"></canvas>
+<button id="fsbtn" onclick="_exitFullscreen()" aria-label="Quitter le plein écran" title="Quitter le plein écran">&#x2715;</button>
 
 
 <div class="scan-beam" aria-hidden="true"></div>
@@ -3472,6 +3494,36 @@ function selectLang(lang) {
 function _focusInput() {
   if (window.matchMedia('(pointer: fine)').matches) input.focus();
 }
+
+// ── Plein écran ──────────────────────────────────────────────────────────────
+function _enterFullscreen() {
+  // iOS PWA standalone déjà en plein écran
+  if (navigator.standalone) return;
+  const el = document.documentElement;
+  try {
+    if (el.requestFullscreen)            el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+  } catch(e) {}
+}
+function _exitFullscreen() {
+  try {
+    if (document.exitFullscreen)             document.exitFullscreen();
+    else if (document.webkitExitFullscreen)  document.webkitExitFullscreen();
+    else if (document.mozCancelFullScreen)   document.mozCancelFullScreen();
+  } catch(e) {}
+}
+function _updateFsBtn() {
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const btn = document.getElementById('fsbtn');
+  if (btn) btn.style.display = isFs ? 'flex' : 'none';
+}
+document.addEventListener('fullscreenchange',       _updateFsBtn);
+document.addEventListener('webkitfullscreenchange', _updateFsBtn);
+
+// Entrée automatique en plein écran sur la première interaction utilisateur
+document.addEventListener('click',      function() { _enterFullscreen(); }, { once: true, capture: true });
+document.addEventListener('touchstart', function() { _enterFullscreen(); }, { once: true, capture: true, passive: true });
 
 function lockUI() {
   _brain.setState('thinking');
