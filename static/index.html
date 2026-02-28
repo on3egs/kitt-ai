@@ -657,7 +657,9 @@ body.kb-open { padding-bottom: 222px; }
 }
 .kb-shift-on { background: #130000; border-color: #500000; color: #ff5533; }
 @media (min-width: 769px) { #kitt-kb { display: none !important; } }
-.input-area button#send {
+/* Bouton ENVOYER masqué — envoi via Entrée PC / touche native mobile */
+.input-area button#send { display: none !important; }
+.input-area button#send-hidden {
   background: linear-gradient(180deg, #cc0000, #880000);
   color: #fff;
   border: 1px solid #ff2200;
@@ -2323,8 +2325,8 @@ button       { pointer-events: auto; cursor: pointer; }
   <!-- cam et audio masqués — JS préservé, boutons invisibles -->
   <button class="cam-btn" id="cam" onclick="sendVision()" aria-hidden="true"></button>
   <button class="audio-btn" id="audiobtn" onclick="activateAudio()" aria-hidden="true"></button>
-  <input type="text" id="input" placeholder="Parlez à KITT..." autofocus>
-  <button id="send" onclick="sendMessage()">ENVOYER</button>
+  <input type="text" id="input" placeholder="Parlez à KITT..." autofocus enterkeyhint="send" inputmode="text">
+  <button id="send" onclick="sendMessage()" aria-hidden="true"></button>
 </div>
 
 <div class="status-bar">
