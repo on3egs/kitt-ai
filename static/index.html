@@ -389,8 +389,8 @@ body > * { position: relative; z-index: var(--z-content); }
 
 .message {
   max-width: 84%;
-  padding: 5px 8px 4px;
-  border-radius: 0;
+  padding: 10px 14px 8px;
+  border-radius: 10px;
   font-size: 1.0em;
   line-height: 1.5;
   position: relative;
@@ -510,7 +510,7 @@ body > * { position: relative; z-index: var(--z-content); }
   background: rgba(110, 55, 0, 0.14);
   border: none;
   border-left: 3px solid rgba(255, 140, 0, 0.55);
-  border-radius: 0 6px 6px 0;
+  border-radius: 2px 12px 12px 2px;
   color: #ffbb55;
   font-style: italic;
 }
@@ -2700,8 +2700,7 @@ async function _playAndRevealNext() {
     src.buffer = decoded;
     const vbAnalyser = ensureVoiceboxAnalyser();
     const gainNode = ctx.createGain();
-    // Compenser le ducking PulseAudio quand le micro AUTO est actif (~-50%)
-    gainNode.gain.value = autoListenActive ? 2.2 : 1.0;
+    gainNode.gain.value = 1.0;
     src.connect(gainNode);
     gainNode.connect(vbAnalyser);
     src.onended = () => _playAndRevealNext();
@@ -3275,7 +3274,11 @@ async function toggleAutoListen() {
     };
 
     source.connect(autoProcessor);
-    autoProcessor.connect(autoContext.destination);
+    // Noeud muet : requis pour déclencher onaudioprocess sans envoyer le micro dans les haut-parleurs
+    const muteNode = autoContext.createGain();
+    muteNode.gain.value = 0;
+    autoProcessor.connect(muteNode);
+    muteNode.connect(autoContext.destination);
 
     autoListenActive = true;
     _brain.setState('listening');
