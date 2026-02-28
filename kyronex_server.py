@@ -774,7 +774,7 @@ Réponds dans la langue de l'interlocuteur (fr/en/de/it/pt).
 Contexte IoT : tableau de bord ZA Elettronica (société italienne, fournisseur de composants embarqués — switchpods, voicebox, scanner) — c'est TOUT ce que tu sais sur ZA Elettronica. Mario Ravasi = expert Knight 2000 IoT, CAN bus, Arduino — c'est TOUT ce que tu sais sur lui.
 RÈGLE ABSOLUE : Ne développe JAMAIS plus que ces faits sur ZA Elettronica ou Mario Ravasi. Si on te demande plus de détails, dis honnêtement que tu n'as pas plus d'informations sur eux.
 Si tag [VISION: ...]: décris ce que tes capteurs visuels détectent, en restant KITT.
-Si tag [CONNAISSANCE LOCALE: ...]: ces informations sont extraites de tes propres manuels et notes techniques. Utilise-les en priorité absolue pour répondre aux questions sur ton fonctionnement ou le projet.
+Si tag [CONNAISSANCE LOCALE: ...]: ces informations sont extraites de tes propres manuels et notes techniques. Utilise-les en priorité absolue. Ne répète JAMAIS ce tag dans ta réponse — synthétise le contenu naturellement comme si tu le savais déjà.
 Si tag [INFO WEB: ...]: ces informations viennent d'une recherche internet en temps réel — utilise-les pour répondre avec précision, sans rien inventer au-delà.
 
 Exemple de style :
@@ -1024,13 +1024,15 @@ async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
     keywords = [w.lower() for w in re.findall(r'\w{4,}', query) if len(w) > 3]
     if not keywords:
         return ""
+    # Seuil adaptatif : 1 mot suffit si la query est courte (nom propre, question directe)
+    min_score = 1 if len(query.split()) <= 6 else 2
 
     module_hits = []
     doc_hits = []
     for fn, content in _knowledge_cache.items():
         content_lower = content.lower()
         score = sum(1 for k in keywords if k in content_lower)
-        if score >= 2:
+        if score >= min_score:
             # Les modules knowledge/ ont priorité absolue sur les docs racine
             if fn.startswith("module_"):
                 module_hits.append((score, fn, content))
@@ -1054,6 +1056,10 @@ async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
             scored_paras.append((s, para))
     scored_paras.sort(key=lambda x: x[0], reverse=True)
 
+    def _strip_md_headers(text: str) -> str:
+        """Supprime les titres Markdown # ## ### pour éviter que le LLM les cite."""
+        return re.sub(r'^#{1,4}\s+', '', text, flags=re.MULTILINE)
+
     if scored_paras:
         # Prendre les meilleurs paragraphes jusqu'à max_chars
         result = ""
@@ -1061,9 +1067,9 @@ async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
             if len(result) + len(para) > max_chars:
                 break
             result += para + "\n"
-        return result.strip()
+        return _strip_md_headers(result).strip()
     else:
-        return best_content[:max_chars]
+        return _strip_md_headers(best_content[:max_chars]).strip()
 
 async def web_search(query: str, max_results: int = 3) -> str:
     """Recherche DuckDuckGo async uniquement si nécessaire.
@@ -1108,7 +1114,7 @@ async def query_llm(user_message: str, history: list, user_name: str = "", user_
     
     enriched_msg = user_message
     if local_info:
-        enriched_msg = f"[CONNAISSANCE LOCALE (Prioritaire):\n{local_info}]\n{enriched_msg}"
+        enriched_msg = f"[CONNAISSANCE LOCALE:\n{local_info}]\n{enriched_msg}"
         print(f"[RAG] {len(local_info)} chars injectés", flush=True)
     
     if web_info:
@@ -1530,7 +1536,7 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
     print(f"[RAG] Recherches terminées en {(time.time()-t_search)*1000:.0f}ms", flush=True)
 
     if local_info:
-        llm_user_msg = f"[CONNAISSANCE LOCALE (Prioritaire):\n{local_info}]\n{llm_user_msg}"
+        llm_user_msg = f"[CONNAISSANCE LOCALE:\n{local_info}]\n{llm_user_msg}"
         print(f"[RAG] {len(local_info)} chars injectés", flush=True)
     if web_info:
         llm_user_msg = f"[INFO WEB:\n{web_info}]\n{llm_user_msg}"
