@@ -38,4 +38,14 @@ static/backups_night/
 # Claude Code
 .claude/
 
+# Données personnelles utilisateurs (confidentielles)
+user_memories/
+conv_data/
+
+# Backups HTML locaux
+static/index.backup.html
+static/index.html.restored
+static/index.kitt.html
+static/index_v35_pre_gemini.html
+
 # PDFs générés — inclus volontairement
