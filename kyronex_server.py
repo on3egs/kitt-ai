@@ -988,52 +988,82 @@ _SEARCH_TRIGGERS = re.compile(
 # ── RAG Local — Système de connaissance interne ──────────────────────────
 _KNOWLEDGE_FILES = [
     "GEMINI.md", "CLAUDE.md", "SUPER_NOTES.md", "GEMINI_MODIF_NOTES.md",
-    "BACKUP_RESTORE.md", "TRANSFERT_HTML.md", "KITT_COMMANDES.pdf"
+    "BACKUP_RESTORE.md", "TRANSFERT_HTML.md",
 ]
+KNOWLEDGE_DIR = BASE_DIR / "knowledge"
+KNOWLEDGE_DIR.mkdir(exist_ok=True)
 _knowledge_cache = {}
 
 def load_local_knowledge():
-    """Charge les fichiers de documentation pour le RAG local."""
+    """Charge les fichiers MD de documentation + tous les modules de knowledge/."""
+    # Fichiers racine historiques
     for fn in _KNOWLEDGE_FILES:
         path = BASE_DIR / fn
         if path.exists():
             try:
-                # Si PDF, on ne peut pas lire le texte sans bibliothèque, 
-                # on se contente des .md pour le moment
-                if fn.endswith(".md"):
-                    content = path.read_text(encoding="utf-8")
-                    # Nettoyer un peu le markdown (enlever trop de sauts de ligne)
-                    content = re.sub(r'\n{3,}', '\n\n', content)
-                    _knowledge_cache[fn] = content
-                    print(f"[RAG] Indexé: {fn} ({len(content)} chars)")
+                content = path.read_text(encoding="utf-8")
+                content = re.sub(r'\n{3,}', '\n\n', content)
+                _knowledge_cache[fn] = content
+                print(f"[RAG] Indexé: {fn} ({len(content)} chars)")
             except Exception as e:
                 print(f"[RAG] Erreur indexation {fn}: {e}")
+    # Modules thématiques dans knowledge/
+    for path in sorted(KNOWLEDGE_DIR.glob("*.md")):
+        try:
+            content = path.read_text(encoding="utf-8")
+            content = re.sub(r'\n{3,}', '\n\n', content)
+            _knowledge_cache[path.name] = content
+            print(f"[RAG] Indexé: {path.name} ({len(content)} chars)")
+        except Exception as e:
+            print(f"[RAG] Erreur indexation {path.name}: {e}")
 
 load_local_knowledge()
 
 async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
-    """Recherche simple par mots-clés dans les fichiers indexés."""
+    """Recherche par mots-clés dans les fichiers indexés — extrait le paragraphe pertinent."""
     keywords = [w.lower() for w in re.findall(r'\w{4,}', query) if len(w) > 3]
     if not keywords:
         return ""
-    
-    hits = []
+
+    module_hits = []
+    doc_hits = []
     for fn, content in _knowledge_cache.items():
-        score = sum(1 for k in keywords if k in content.lower())
-        if score > 0:
-            hits.append((score, fn, content))
-    
+        content_lower = content.lower()
+        score = sum(1 for k in keywords if k in content_lower)
+        if score >= 2:
+            # Les modules knowledge/ ont priorité absolue sur les docs racine
+            if fn.startswith("module_"):
+                module_hits.append((score, fn, content))
+            else:
+                doc_hits.append((score, fn, content))
+
+    hits = module_hits if module_hits else doc_hits
     if not hits:
         return ""
-    
-    # Trier par score et prendre le meilleur
+
     hits.sort(key=lambda x: x[0], reverse=True)
-    best_fn = hits[0][1]
-    best_content = hits[0][2]
-    
-    # Extraire un snippet pertinent ou les 1500 premiers caractères
-    # Pour faire simple, on prend les 1500 premiers chars du fichier le plus pertinent
-    return f"Fichier: {best_fn}\n{best_content[:max_chars]}..."
+    best_fn, best_content = hits[0][1], hits[0][2]
+
+    # Extraire le(s) paragraphe(s) les plus pertinents plutôt que les N premiers chars
+    paragraphs = re.split(r'\n(?=##?\s)', best_content)
+    scored_paras = []
+    for para in paragraphs:
+        para_lower = para.lower()
+        s = sum(1 for k in keywords if k in para_lower)
+        if s > 0:
+            scored_paras.append((s, para))
+    scored_paras.sort(key=lambda x: x[0], reverse=True)
+
+    if scored_paras:
+        # Prendre les meilleurs paragraphes jusqu'à max_chars
+        result = ""
+        for _, para in scored_paras:
+            if len(result) + len(para) > max_chars:
+                break
+            result += para + "\n"
+        return f"[Module: {best_fn}]\n{result.strip()}"
+    else:
+        return f"[Module: {best_fn}]\n{best_content[:max_chars]}"
 
 async def web_search(query: str, max_results: int = 3) -> str:
     """Recherche DuckDuckGo async uniquement si nécessaire.
@@ -1473,8 +1503,35 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
 
     asyncio.create_task(broadcast_monitor({"type": "user_msg", "user": user_display, "session_id": session_id, "message": user_msg}))
 
-    # Enrichissement web systématique (sur le message original, pas la version vision)
-    web_info = await web_search(user_msg)
+    # Lancer RAG + web_search en parallèle
+    t_search = time.time()
+    rag_task = asyncio.create_task(search_local_knowledge(user_msg))
+    web_task = asyncio.create_task(web_search(user_msg))
+
+    # Préparer la réponse SSE immédiatement
+    resp = web.StreamResponse()
+    resp.headers["Content-Type"] = "text/event-stream"
+    resp.headers["Cache-Control"] = "no-cache"
+    await resp.prepare(request)
+
+    # Attendre 1 seconde — si les recherches ne sont pas terminées, annoncer à voix haute
+    done, pending = await asyncio.wait({rag_task, web_task}, timeout=1.0)
+    if pending:
+        _search_announce = "Consultation de ma base de données en cours."
+        await resp.write(f"data: {json.dumps({'token': _search_announce})}\n\n".encode())
+        _ann_audio = await _synth_chunk(_search_announce, "normal", lang)
+        if _ann_audio:
+            await resp.write(f"data: {json.dumps({'audio_chunk': _ann_audio, 'chunk_text': _search_announce})}\n\n".encode())
+        print(f"[RAG] Recherche longue ({(time.time()-t_search)*1000:.0f}ms) — annonce vocale", flush=True)
+
+    # Récupérer les résultats (attendre si pas encore terminés)
+    local_info = await rag_task
+    web_info = await web_task
+    print(f"[RAG] Recherches terminées en {(time.time()-t_search)*1000:.0f}ms", flush=True)
+
+    if local_info:
+        llm_user_msg = f"[CONNAISSANCE LOCALE (Prioritaire):\n{local_info}]\n{llm_user_msg}"
+        print(f"[RAG] {len(local_info)} chars injectés", flush=True)
     if web_info:
         llm_user_msg = f"[INFO WEB:\n{web_info}]\n{llm_user_msg}"
         print(f"[WEB] {len(web_info)} chars injectés", flush=True)
@@ -1485,11 +1542,6 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
     messages.append({"role": "user", "content": llm_user_msg})
 
     vlog(f"STREAM_LLM_START msgs={len(messages)} user={user_display}")
-
-    resp = web.StreamResponse()
-    resp.headers["Content-Type"] = "text/event-stream"
-    resp.headers["Cache-Control"] = "no-cache"
-    await resp.prepare(request)
 
     full_reply = ""
     sentence_buf = ""
