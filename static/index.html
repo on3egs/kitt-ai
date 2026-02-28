@@ -5980,17 +5980,8 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
     _mkStars();
     _loop();
     _mkAudio();
-    _t(function() { if (AC) _playTheme(); }, 300);
 
-    var TL = document.getElementById('intro-tagline');
-    var TT = document.getElementById('intro-title');
-    var SL = document.getElementById('intro-scanline');
-    var SB = document.getElementById('intro-sub');
-    var BY = document.getElementById('intro-by');
-    var PR = document.getElementById('intro-pre');
-    var FN = document.getElementById('intro-final');
-
-    // 1.0s — KITT FRANCO-BELGE fly-through Superman (en premier — instant majestueux)
+    // 1.0s — KITT FRANCO-BELGE fly-through Superman
     _t(function () { _flyGroup(); }, 1000);
 
     // 2.8s — décélération hyperspace (pendant le fly-through)
@@ -6005,76 +5996,8 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
       decel();
     }, 2800);
 
-    // 4.5s — bips boot Alien (3 tonalités ascendantes)
-    _t(function () { _alienBoot(); }, 4500);
-
-    // 5.0s — terminal Alien : typewriter rapide + bips
-    _t(function () {
-      TL.style.opacity = '1';
-      TL.style.color = '#4e8f4e';
-      _type(TL,
-        '> KYRONEX NEURAL NET v7.4.1\n> AUTHENTICATION......[ OK ]\n> BOOT SEQUENCE COMPLETE',
-        25, _beep);
-    }, 5000);
-
-    // 8.0s — texte terminal disparaît
-    _t(function () { TL.style.opacity = '0'; }, 8000);
-
-    // 8.5s — texte poétique, typewriter lent, sans bips
-    _t(function () {
-      TL.style.color = '#c0c0c0';
-      TL.innerHTML = '';
-      TL.style.opacity = '1';
-      _type(TL,
-        'En l\'an 2026, la frontière entre la machine\net la conscience humaine\na définitivement disparu...',
-        42, null);
-    }, 8500);
-
-    // 14.0s — texte poétique disparaît
-    _t(function () { TL.style.opacity = '0'; }, 14000);
-
-    // 14.5s — KYRONEX s'étend + stab cuivres
-    _t(function () {
-      _brass(164.8, 0.20);
-      TT.classList.add('show');
-    }, 14500);
-
-    // 15.2s — scanline verticale
-    _t(function () {
-      if (!SL) return;
-      SL.style.animation = 'none';
-      SL.style.webkitAnimation = 'none';
-      SL.style.top = '-5%';
-      SL.style.opacity = '0';
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () {
-          SL.style.animation = 'intro-scan-v 1.2s ease-in-out forwards';
-          SL.style.webkitAnimation = 'intro-scan-v 1.2s ease-in-out forwards';
-        });
-      });
-    }, 15200);
-
-    // 15.7s — SYSTEM INTELLIGENCE
-    _t(function () { _brass(196.0, 0.11); SB.style.opacity = '1'; }, 15700);
-
-    // 16.2s — by MANIX
-    _t(function () { _brass(164.8, 0.09); BY.style.opacity = '1'; }, 16200);
-
-    // 16.7s — PRÉSENTE
-    _t(function () { _brass(130.8, 0.08); PR.style.opacity = '1'; }, 16700);
-
-    // 17.2s — [ KNIGHT INDUSTRIES TWO THOUSAND ] glitch + gros stab
-    _t(function () {
-      _brass(130.8, 0.30);
-      FN.classList.add('glitch');
-      FN.style.opacity = '1';
-    }, 17200);
-
-    // 17.6s — glow intense sur KYRONEX
-    _t(function () { if (TT) TT.classList.add('glow'); }, 17600);
-
-    // 18.0s — fin (morphing dissolve 3s vers interface KITT)
-    _t(function () { _end(); }, 18000);
+    // 4.5s — fin directe vers l'interface KITT
+    _t(function () { _end(); }, 4500);
   }
 
   document.addEventListener('DOMContentLoaded', _run);
