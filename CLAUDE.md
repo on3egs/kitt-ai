@@ -260,4 +260,4 @@ LD_LIBRARY_PATH=/home/kitt/CTranslate2/install/lib \
 
 ## JOURNAL DES SESSIONS
 
-Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260225_011914, itération 1/1 en cours, fichier 172K/4869 lignes
+Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260227_033704, itération 1/1 en cours, fichier 220K/6230 lignes
