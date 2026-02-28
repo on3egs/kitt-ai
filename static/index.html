@@ -1276,6 +1276,28 @@ body.kb-open { padding-bottom: 222px; }
 }
 @media (max-width: 480px) { .header-lang-selector { display: none; } }
 
+/* ── Sélecteur de langue mobile (bas de page, ≤480px uniquement) ── */
+.lang-selector-mobile {
+  display: none;
+}
+@media (max-width: 480px) {
+  .lang-selector-mobile {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 6px 10px 4px;
+    border-top: 1px solid var(--c-border);
+    background: var(--c-bg-panel);
+  }
+  .lang-selector-mobile .lang-opt {
+    font-size: 0.65em;
+    padding: 5px 10px;
+    min-width: 36px;
+    min-height: 30px;
+  }
+}
+
 /* ── Conteneur boutons header ── */
 .header-btns {
   display: flex;
@@ -2337,6 +2359,17 @@ button       { pointer-events: auto; cursor: pointer; }
 </div>
 
 <div class="chat-area" id="chat"></div>
+
+<!-- Sélecteur de langue mobile (visible uniquement ≤480px) -->
+<div class="lang-selector-mobile" id="langSelectorMobile">
+  <button class="lang-opt" data-lang="fr" onclick="selectLang('fr')">FR</button>
+  <button class="lang-opt" data-lang="en" onclick="selectLang('en')">EN</button>
+  <button class="lang-opt" data-lang="de" onclick="selectLang('de')">DE</button>
+  <button class="lang-opt" data-lang="it" onclick="selectLang('it')">IT</button>
+  <button class="lang-opt" data-lang="es" onclick="selectLang('es')">ES</button>
+  <button class="lang-opt" data-lang="nl" onclick="selectLang('nl')">NL</button>
+  <button class="lang-opt" data-lang="pt" onclick="selectLang('pt')">PT</button>
+</div>
 
 <div class="input-area">
   <button class="mic-btn" id="mic" onclick="toggleMic()" title="Push-to-talk">

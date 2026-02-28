@@ -264,4 +264,4 @@ LD_LIBRARY_PATH=/home/kitt/CTranslate2/install/lib \
 
 ## JOURNAL DES SESSIONS
 
-Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260228, V37.12 — Filtrage <think> Qwen + paramètres LLM optimaux
+Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260228, V37.13 — Boutons langue visibles iOS (lang-selector-mobile)
