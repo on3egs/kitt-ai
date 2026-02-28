@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KYRONEX · K.I.T.T. — by Manix</title>
+  <meta name="description" content="KYRONEX — IA embarquée sur NVIDIA Jetson Orin Nano Super. Knight Industries Two Thousand, assistant vocal temps réel. by Manix.">
+  <meta property="og:title" content="KYRONEX · K.I.T.T.">
+  <meta property="og:description" content="IA embarquée sur NVIDIA Jetson Orin Nano Super — LLM, STT, TTS temps réel. by Manix.">
+  <meta property="og:type" content="website">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red-hot:  #ff2222;
+      --red-main: #cc0000;
+      --red-dim:  #660000;
+      --red-ghost:#220000;
+      --bg:       #000000;
+      --text:     #ff4444;
+      --text-dim: #882222;
+      --border:   #330000;
+      --font:     'Courier New', 'Lucida Console', monospace;
+    }
+
+    html, body {
+      background: #000;
+      color: var(--text);
+      font-family: var(--font);
+      height: 100%;
+      overflow-x: hidden;
+    }
+
+    /* ── INTRO ─────────────────────────────────────────── */
+    #intro {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    #intro.fade-out {
+      opacity: 0;
+      transition: opacity 2.5s ease;
+      pointer-events: none;
+    }
+    #intro.gone { display: none; }
+
+    #stars-cv {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+
+    #i-group {
+      position: absolute;
+      top: 50%; left: 50%;
+      font-family: var(--font);
+      font-size: 2.8em;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 0.15em;
+      text-align: center;
+      opacity: 0;
+      white-space: nowrap;
+      pointer-events: none;
+      text-shadow: 0 0 30px rgba(255,100,100,0.8), 0 0 60px rgba(200,50,50,0.4);
+    }
+    #i-tagline {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      font-family: var(--font);
+      font-size: 1.05em;
+      color: #c0c0c0;
+      text-align: center;
+      opacity: 0;
+      line-height: 2.0;
+      transition: opacity 0.8s;
+      width: 80%;
+      pointer-events: none;
+    }
+    #i-title {
+      position: absolute;
+      top: 30%; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font);
+      font-size: 3.5em;
+      font-weight: bold;
+      color: #aa2222;
+      letter-spacing: 0.3em;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1.5s;
+      pointer-events: none;
+    }
+    #i-title.show { opacity: 1; }
+    #i-title.glow { text-shadow: 0 0 20px #ff4444, 0 0 50px #aa2222, 0 0 100px rgba(200,50,50,0.5); }
+    #i-scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #aa2222, #ff4444, #aa2222, transparent);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #i-sub {
+      position: absolute;
+      top: 48%; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font);
+      font-size: 0.72em;
+      color: #884422;
+      letter-spacing: 6px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+    #i-by {
+      position: absolute;
+      top: 58%; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font);
+      font-size: 1.5em;
+      font-weight: bold;
+      color: #ffffff;
+      letter-spacing: 6px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+    #i-pre {
+      position: absolute;
+      top: 67%; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font);
+      font-size: 0.68em;
+      color: #666;
+      letter-spacing: 8px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s;
+      pointer-events: none;
+    }
+    #i-final {
+      position: absolute;
+      top: 75%; left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font);
+      font-size: 1.05em;
+      color: #cc3333;
+      letter-spacing: 4px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.8s;
+      pointer-events: none;
+      width: 90%;
+    }
+    #i-final.glitch { opacity: 1; animation: glitch 0.4s ease forwards; }
+    #i-skip {
+      position: absolute;
+      bottom: 18px; right: 22px;
+      font-family: var(--font);
+      font-size: 0.62em;
+      color: #333;
+      letter-spacing: 3px;
+      pointer-events: none;
+    }
+
+    @keyframes glitch {
+      0%  { clip-path: inset(0 0 0 0); transform: translateX(-50%); }
+      15% { clip-path: inset(10% 0 20% 0); transform: translateX(calc(-50% - 4px)); }
+      30% { clip-path: inset(60% 0 5% 0); transform: translateX(calc(-50% + 4px)); }
+      45% { clip-path: inset(0 0 0 0); transform: translateX(-50%); }
+      100%{ clip-path: none; transform: translateX(-50%); }
+    }
+    @keyframes scan-v {
+      0%   { top: -2px; opacity: 1; }
+      100% { top: 101%; opacity: 0; }
+    }
+
+    /* ── VITRINE ───────────────────────────────────────── */
+    #showcase {
+      display: none;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 50% 0%, #0d0000 0%, #050000 50%, #020000 100%);
+      padding: 0 0 60px;
+    }
+    #showcase.visible { display: block; }
+
+    /* Scanner déco en hero */
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: 60px 20px 40px;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .hero-scanner {
+      width: 260px;
+      height: 22px;
+      margin: 0 auto 32px;
+      position: relative;
+      background: #0a0000;
+      border: 1px solid var(--red-dim);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .hero-scanner-head {
+      position: absolute;
+      top: 2px; bottom: 2px;
+      width: 48px;
+      background: linear-gradient(90deg, transparent, #ff2222, #ff6666, #ff2222, transparent);
+      border-radius: 2px;
+      box-shadow: 0 0 18px #ff2222, 0 0 36px rgba(255,34,34,0.5);
+      animation: scanner-sweep 1.8s ease-in-out infinite alternate;
+    }
+    @keyframes scanner-sweep {
+      0%   { left: 0; }
+      100% { left: calc(100% - 48px); }
+    }
+
+    .hero-title {
+      font-size: clamp(2.2em, 8vw, 4.5em);
+      font-weight: bold;
+      letter-spacing: 0.35em;
+      color: var(--red-hot);
+      text-shadow: 0 0 20px var(--red-main), 0 0 50px rgba(200,0,0,0.4);
+      margin-bottom: 8px;
+    }
+    .hero-sub {
+      font-size: 0.75em;
+      letter-spacing: 6px;
+      color: var(--text-dim);
+      margin-bottom: 28px;
+    }
+    .hero-tagline {
+      font-size: 0.9em;
+      color: #888;
+      letter-spacing: 2px;
+      line-height: 1.8;
+      max-width: 560px;
+      margin: 0 auto 36px;
+    }
+    .hero-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 22px;
+      font-family: var(--font);
+      font-size: 0.78em;
+      letter-spacing: 3px;
+      text-decoration: none;
+      border: 1px solid var(--red-dim);
+      color: var(--red-main);
+      background: transparent;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: var(--red-ghost);
+      border-color: var(--red-main);
+      color: var(--red-hot);
+      box-shadow: 0 0 14px rgba(204,0,0,0.35);
+    }
+    .btn.primary {
+      background: var(--red-ghost);
+      border-color: var(--red-main);
+      color: var(--red-hot);
+    }
+
+    /* Sections */
+    .section {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 50px 24px 0;
+    }
+    .section-title {
+      font-size: 0.68em;
+      letter-spacing: 8px;
+      color: var(--text-dim);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+
+    /* Features grid */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .feat {
+      border: 1px solid var(--border);
+      background: #060000;
+      padding: 20px 18px;
+      transition: border-color 0.2s;
+    }
+    .feat:hover { border-color: var(--red-dim); }
+    .feat-icon {
+      font-size: 1.4em;
+      color: var(--red-main);
+      margin-bottom: 10px;
+      letter-spacing: 2px;
+    }
+    .feat-name {
+      font-size: 0.8em;
+      letter-spacing: 4px;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .feat-desc {
+      font-size: 0.68em;
+      color: var(--text-dim);
+      line-height: 1.7;
+      letter-spacing: 1px;
+    }
+
+    /* Specs */
+    .specs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75em;
+    }
+    .specs-table tr { border-bottom: 1px solid var(--border); }
+    .specs-table td {
+      padding: 10px 8px;
+      letter-spacing: 1px;
+    }
+    .specs-table td:first-child {
+      color: var(--text-dim);
+      width: 38%;
+      letter-spacing: 2px;
+    }
+    .specs-table td:last-child { color: #ccc; }
+
+    /* Terminal block */
+    .terminal {
+      background: #040000;
+      border: 1px solid var(--border);
+      padding: 18px 20px;
+      font-size: 0.72em;
+      color: #4e8f4e;
+      line-height: 1.9;
+      letter-spacing: 1px;
+      overflow-x: auto;
+    }
+    .terminal .prompt { color: var(--red-dim); }
+    .terminal .out    { color: #555; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px 20px 20px;
+      font-size: 0.62em;
+      color: #331111;
+      letter-spacing: 4px;
+      border-top: 1px solid var(--border);
+      margin-top: 50px;
+    }
+    .footer a { color: var(--red-dim); text-decoration: none; }
+    .footer a:hover { color: var(--red-main); }
+
+    /* Scanline effet global sur la vitrine */
+    #showcase::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── INTRO CINEMATIQUE ── -->
+<div id="intro" onclick="_skip()">
+  <canvas id="stars-cv"></canvas>
+  <div id="i-group">KYRONEX&nbsp;A.I.</div>
+  <div id="i-tagline"></div>
+  <div id="i-title">KYRONEX</div>
+  <div id="i-scanline"></div>
+  <div id="i-sub">SYSTEM&nbsp;INTELLIGENCE</div>
+  <div id="i-by">by&nbsp;MANIX</div>
+  <div id="i-pre">PRÉSENTE</div>
+  <div id="i-final">[ KNIGHT INDUSTRIES TWO THOUSAND ]</div>
+  <div id="i-skip">[ CLIQUER POUR PASSER ]</div>
+</div>
+
+<!-- ── VITRINE ── -->
+<div id="showcase">
+
+  <div class="hero">
+    <div class="hero-scanner">
+      <div class="hero-scanner-head"></div>
+    </div>
+    <div class="hero-title">KYRONEX</div>
+    <div class="hero-sub">KINETIC YIELDING RESPONSIVE ONBOARD NEURAL EXPERT</div>
+    <div class="hero-tagline">
+      Intelligence artificielle embarquée sur NVIDIA Jetson Orin Nano Super.<br>
+      Assistant vocal temps réel — LLM · STT · TTS · Vision.
+    </div>
+    <div class="hero-btns">
+      <a class="btn primary" href="https://github.com/on3egs/kitt-ai" target="_blank">[ GITHUB ]</a>
+      <a class="btn" href="https://github.com/on3egs/kitt-ai/releases" target="_blank">[ RELEASES ]</a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">CAPACITES SYSTEME</div>
+    <div class="features">
+      <div class="feat">
+        <div class="feat-icon">LLM</div>
+        <div class="feat-name">INTELLIGENCE</div>
+        <div class="feat-desc">Qwen 2.5 3B Q5 via llama.cpp — 1400ms de latence, 3 GB VRAM. Streaming SSE token par token.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">STT</div>
+        <div class="feat-name">ECOUTE</div>
+        <div class="feat-desc">Whisper base GPU float16 — 350ms. Langue forcée selon preferénce utilisateur. VAD intégré.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">TTS</div>
+        <div class="feat-name">VOIX</div>
+        <div class="feat-desc">Piper fr_FR-tom-medium GPU CUDA — 490ms. Streaming audio par phrase. Émotions vocales (5 profils sox).</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">RAG</div>
+        <div class="feat-name">MEMOIRE</div>
+        <div class="feat-desc">50 faits persistants auto-extraits. Contexte injecté dans le prompt. Multi-utilisateur (nom, langue, profil).</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">VOX</div>
+        <div class="feat-name">WAKE WORD</div>
+        <div class="feat-desc">Detection "KITT" par regex + Whisper court. VAD 15ms silence 1200ms. Auto-écoute continue.</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">SYS</div>
+        <div class="feat-name">FUNCTION CALLING</div>
+        <div class="feat-desc">Heure, date, météo wttr.in, timer, infos système — 0ms latence, sans appel LLM.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">SPECIFICATIONS HARDWARE</div>
+    <table class="specs-table">
+      <tr><td>PLATEFORME</td><td>NVIDIA Jetson Orin Nano Super 8GB</td></tr>
+      <tr><td>OS</td><td>Ubuntu 22.04 — JetPack 6.2.2</td></tr>
+      <tr><td>RAM</td><td>8 GB unifiée CPU / GPU</td></tr>
+      <tr><td>GPU</td><td>Tegra iGPU — CUDA 12.6</td></tr>
+      <tr><td>VRAM UTILISEE</td><td>~3.9 GB / 8 GB</td></tr>
+      <tr><td>SERVEUR WEB</td><td>aiohttp HTTPS port 3000</td></tr>
+      <tr><td>INTERFACE</td><td>PWA — iOS / Android / PC</td></tr>
+      <tr><td>SSL</td><td>Certificats auto-signés</td></tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <div class="section-title">DEMARRAGE RAPIDE</div>
+    <div class="terminal">
+      <div><span class="prompt"># </span>Cloner le repo</div>
+      <div>git clone https://github.com/on3egs/kitt-ai</div>
+      <div class="out">&nbsp;</div>
+      <div><span class="prompt"># </span>Installer les dependances</div>
+      <div>cd kitt-ai &amp;&amp; python3 -m venv venv</div>
+      <div>source venv/bin/activate &amp;&amp; pip install -r requirements.txt</div>
+      <div class="out">&nbsp;</div>
+      <div><span class="prompt"># </span>Lancer KYRONEX</div>
+      <div>./start_kyronex.sh</div>
+      <div class="out">&nbsp;</div>
+      <div><span class="prompt"># </span>Ouvrir dans le navigateur</div>
+      <div>https://&lt;IP_JETSON&gt;:3000</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">ARCHITECTURE</div>
+    <div class="terminal">
+      <div>kyronex_server.py  ← Serveur web aiohttp + routes API</div>
+      <div>piper_gpu.py       ← TTS GPU optimise (1 inference CUDA)</div>
+      <div>vision.py          ← YOLOv8 object detection daemon</div>
+      <div>start_kyronex.sh   ← Lanceur complet (LLM + STT + TTS)</div>
+      <div>static/index.html  ← Interface web PWA (~6300 lignes)</div>
+      <div>memory.json        ← Memoire persistante KITT</div>
+      <div>models/            ← qwen2.5-3b-instruct-q5_k_m.gguf</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div style="margin-bottom:12px; color: #441111; font-size: 1.3em; letter-spacing: 0.3em;">KYRONEX</div>
+    KNIGHT INDUSTRIES TWO THOUSAND &mdash; by <a href="https://github.com/on3egs" target="_blank">MANIX</a><br><br>
+    <a href="https://github.com/on3egs/kitt-ai" target="_blank">github.com/on3egs/kitt-ai</a>
+    &nbsp;&mdash;&nbsp; ELv2 License &nbsp;&mdash;&nbsp; Jetson Orin Nano Super 8GB
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var on = true, rafId = null, tids = [];
+  var iW, iH, iCtx, stars = [], hspd = 5.5;
+  var AC = null, MASTER = null, REV = null;
+
+  function _t(fn, ms) {
+    var id = setTimeout(function() { if (on) fn(); }, ms);
+    tids.push(id);
+  }
+
+  function _end() {
+    on = false;
+    tids.forEach(clearTimeout);
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (AC) { try { AC.close(); } catch(e){} AC = null; }
+    var intro = document.getElementById('intro');
+    intro.classList.add('fade-out');
+    setTimeout(function() {
+      intro.classList.add('gone');
+      document.getElementById('showcase').classList.add('visible');
+    }, 2500);
+  }
+
+  window._skip = function() {
+    on = false;
+    tids.forEach(clearTimeout);
+    if (rafId) cancelAnimationFrame(rafId);
+    if (AC) { try { AC.close(); } catch(e){} AC = null; }
+    var intro = document.getElementById('intro');
+    intro.classList.add('fade-out');
+    setTimeout(function() {
+      intro.classList.add('gone');
+      document.getElementById('showcase').classList.add('visible');
+    }, 400);
+  };
+
+  // ── AUDIO ──────────────────────────────────────────────
+  function _mkAudio() {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      MASTER = AC.createGain();
+      MASTER.gain.value = 0;
+      MASTER.gain.linearRampToValueAtTime(0.30, AC.currentTime + 5);
+      MASTER.connect(AC.destination);
+      var dly = AC.createDelay(1.0);
+      dly.delayTime.value = 0.40;
+      var fb = AC.createGain(); fb.gain.value = 0.34;
+      REV = AC.createGain(); REV.gain.value = 0.18;
+      dly.connect(fb); fb.connect(dly);
+      dly.connect(REV); REV.connect(MASTER);
+    } catch(e) { AC = null; }
+  }
+
+  function _osc(f, type, t, dur, amp, dest) {
+    if (!AC || !dest) return;
+    var o = AC.createOscillator(), e = AC.createGain();
+    o.type = type; o.frequency.value = f;
+    e.gain.setValueAtTime(0, t);
+    e.gain.linearRampToValueAtTime(amp, t + 0.022);
+    e.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(e); e.connect(dest);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+
+  function _beep() {
+    if (!AC || !MASTER) return;
+    _osc(650 + Math.random() * 950, 'square', AC.currentTime, 0.065, 0.028, MASTER);
+  }
+
+  function _alienBoot() {
+    if (!AC || !MASTER) return;
+    [880, 1047, 1319].forEach(function(f, i) {
+      var t = AC.currentTime + i * 0.20;
+      _osc(f, 'square', t, 0.14, 0.055, MASTER);
+      if (REV) _osc(f, 'square', t, 0.14, 0.018, REV);
+    });
+  }
+
+  function _brass(freq, amp) {
+    if (!AC || !MASTER) return;
+    amp = amp || 0.15;
+    var t = AC.currentTime;
+    [1, 2, 3, 4, 5].forEach(function(h) {
+      var o = AC.createOscillator();
+      var flt = AC.createBiquadFilter();
+      var e = AC.createGain();
+      o.type = h <= 2 ? 'sawtooth' : 'square';
+      o.frequency.value = freq * h;
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(400, t);
+      flt.frequency.exponentialRampToValueAtTime(3800, t + 0.07);
+      flt.frequency.exponentialRampToValueAtTime(1100, t + 2.0);
+      flt.Q.value = 2.0;
+      var hAmp = amp / (h * 0.78);
+      e.gain.setValueAtTime(0, t);
+      e.gain.linearRampToValueAtTime(hAmp, t + 0.038);
+      e.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      o.connect(flt); flt.connect(e); e.connect(MASTER);
+      if (REV) e.connect(REV);
+      o.start(t); o.stop(t + 2.3);
+    });
+  }
+
+  function _whoosh() {
+    if (!AC || !MASTER) return;
+    try {
+      var dur = 3.2, sr = AC.sampleRate;
+      var buf = AC.createBuffer(1, Math.floor(sr * dur), sr);
+      var d = buf.getChannelData(0);
+      for (var i = 0; i < d.length; i++) {
+        var tt = i / sr;
+        var env = tt < 0.3 ? tt / 0.3 : Math.exp(-(tt - 0.3) * 2.0);
+        d[i] = (Math.random() * 2 - 1) * env;
+      }
+      var src = AC.createBufferSource();
+      var flt = AC.createBiquadFilter();
+      var g = AC.createGain();
+      flt.type = 'bandpass'; flt.Q.value = 0.45;
+      flt.frequency.setValueAtTime(100, AC.currentTime);
+      flt.frequency.exponentialRampToValueAtTime(5500, AC.currentTime + 2.0);
+      flt.frequency.exponentialRampToValueAtTime(150, AC.currentTime + 3.2);
+      g.gain.value = 0.58;
+      src.buffer = buf;
+      src.connect(flt); flt.connect(g); g.connect(MASTER);
+      src.start(AC.currentTime);
+    } catch(e) {}
+  }
+
+  function _playTheme() {
+    if (!AC) return;
+    var B = 60 / 116, now = AC.currentTime + 0.3;
+    var BF = [82.4, 82.4, 73.4, 82.4, 87.3, 87.3, 73.4, 82.4];
+    for (var i = 0; i < 52; i++) {
+      var bt = now + i * B * 0.5;
+      var bfq = BF[i % BF.length];
+      var bMod = AC.createOscillator(), bModG = AC.createGain();
+      var bCar = AC.createOscillator(), bFlt = AC.createBiquadFilter(), bEnv = AC.createGain();
+      bMod.type = 'sine'; bMod.frequency.value = bfq * 0.5;
+      bModG.gain.value = bfq * 2.5;
+      bCar.type = 'sine'; bCar.frequency.value = bfq;
+      bFlt.type = 'lowpass'; bFlt.frequency.value = 440; bFlt.Q.value = 4.5;
+      bEnv.gain.setValueAtTime(0.52, bt);
+      bEnv.gain.exponentialRampToValueAtTime(0.001, bt + B * 0.44);
+      bMod.connect(bModG); bModG.connect(bCar.frequency);
+      bCar.connect(bFlt); bFlt.connect(bEnv); bEnv.connect(MASTER);
+      bMod.start(bt); bMod.stop(bt + B * 0.5);
+      bCar.start(bt); bCar.stop(bt + B * 0.5);
+    }
+    var MEL = [
+      [329.6,0.5],[329.6,0.5],[392.0,0.5],[329.6,0.5],
+      [293.7,0.5],[329.6,0.5],[246.9,1.0],[0,1.0],
+      [392.0,0.5],[392.0,0.5],[440.0,0.5],[392.0,0.5],
+      [349.2,0.5],[329.6,0.5],[293.7,1.0],[0,1.0],
+      [493.9,0.5],[493.9,0.5],[587.3,0.5],[493.9,0.5],
+      [440.0,0.5],[493.9,0.5],[392.0,1.0],[0,1.0],
+      [587.3,0.5],[587.3,0.5],[659.3,0.5],[587.3,0.5],
+      [523.3,0.5],[493.9,0.5],[440.0,2.0],[0,1.0]
+    ];
+    var mt = now;
+    for (var rep = 0; rep < 3; rep++) {
+      for (var j = 0; j < MEL.length; j++) {
+        var mf = MEL[j][0], md = MEL[j][1] * B;
+        if (mf > 0) {
+          var fmMod = AC.createOscillator(), fmModG = AC.createGain();
+          var fmCar = AC.createOscillator(), fmEnv = AC.createGain();
+          var fmCar2 = AC.createOscillator(), fmEnv2 = AC.createGain();
+          fmMod.type = 'sine'; fmMod.frequency.value = mf * 3.5;
+          fmModG.gain.value = mf * 5.2;
+          fmCar.type = 'sine'; fmCar.frequency.value = mf;
+          fmCar2.type = 'sine'; fmCar2.frequency.value = mf * 1.0035;
+          fmEnv.gain.setValueAtTime(0, mt);
+          fmEnv.gain.linearRampToValueAtTime(0.17, mt + 0.022);
+          fmEnv.gain.exponentialRampToValueAtTime(0.0001, mt + md - 0.030);
+          fmEnv2.gain.setValueAtTime(0, mt);
+          fmEnv2.gain.linearRampToValueAtTime(0.065, mt + 0.022);
+          fmEnv2.gain.exponentialRampToValueAtTime(0.0001, mt + md - 0.030);
+          fmMod.connect(fmModG);
+          fmModG.connect(fmCar.frequency);
+          fmModG.connect(fmCar2.frequency);
+          fmCar.connect(fmEnv); fmEnv.connect(MASTER);
+          fmCar2.connect(fmEnv2); fmEnv2.connect(MASTER);
+          if (REV) { fmEnv.connect(REV); fmEnv2.connect(REV); }
+          fmMod.start(mt); fmMod.stop(mt + md);
+          fmCar.start(mt); fmCar.stop(mt + md);
+          fmCar2.start(mt); fmCar2.stop(mt + md);
+        }
+        mt += md;
+      }
+    }
+    [82.4, 130.8, 196.0, 246.9].forEach(function(f) {
+      var po = AC.createOscillator(), pe = AC.createGain();
+      po.type = 'sine'; po.frequency.value = f;
+      pe.gain.setValueAtTime(0, now);
+      pe.gain.linearRampToValueAtTime(0.048, now + 5);
+      pe.gain.setValueAtTime(0.048, now + 22);
+      pe.gain.linearRampToValueAtTime(0, now + 28);
+      po.connect(pe); pe.connect(MASTER);
+      if (REV) pe.connect(REV);
+      po.start(now); po.stop(now + 30);
+    });
+  }
+
+  // ── ETOILES HYPERSPACE ────────────────────────────────
+  function _mkStars() {
+    var cv = document.getElementById('stars-cv');
+    if (!cv) return;
+    iW = cv.width  = window.innerWidth;
+    iH = cv.height = window.innerHeight;
+    iCtx = cv.getContext('2d');
+    stars = [];
+    var mR = Math.max(iW, iH) * 0.70;
+    for (var i = 0; i < 420; i++) {
+      stars.push({ a: Math.random()*Math.PI*2, r: 0.04+Math.random()*0.36,
+        sp: 0.0014+Math.random()*0.0030, sz: 0.28+Math.random()*1.5,
+        br: 0.4+Math.random()*0.6, mR: mR });
+    }
+  }
+
+  function _drawStars() {
+    if (!iCtx) return;
+    var W = iW, H = iH, cx = W/2, cy = H/2;
+    iCtx.fillStyle = 'rgba(0,0,0,0.13)';
+    iCtx.fillRect(0, 0, W, H);
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      s.r += s.sp * hspd * 0.013;
+      if (s.r > 1.05) { s.r = 0.01+Math.random()*0.03; s.a = Math.random()*Math.PI*2; }
+      var x = cx + Math.cos(s.a)*s.r*s.mR, y = cy + Math.sin(s.a)*s.r*s.mR;
+      if (hspd > 1.8) {
+        var pr = Math.max(0.001, s.r - s.sp*hspd*0.42);
+        iCtx.beginPath();
+        iCtx.moveTo(cx+Math.cos(s.a)*pr*s.mR, cy+Math.sin(s.a)*pr*s.mR);
+        iCtx.lineTo(x, y);
+        iCtx.strokeStyle = 'rgba(200,218,255,'+Math.min(0.98,s.br*hspd*0.14)+')';
+        iCtx.lineWidth = s.sz*0.68; iCtx.stroke();
+      } else {
+        iCtx.beginPath();
+        iCtx.arc(x, y, s.sz*0.35*(0.5+s.r*1.3), 0, Math.PI*2);
+        iCtx.fillStyle = 'rgba(210,225,255,'+(s.br*Math.min(1,s.r*5.0))+')';
+        iCtx.fill();
+      }
+    }
+  }
+
+  function _loop() { if (!on) return; rafId = requestAnimationFrame(_loop); _drawStars(); }
+
+  // ── TYPEWRITER ────────────────────────────────────────
+  function _type(el, txt, spd, beepFn) {
+    var i = 0;
+    function go() {
+      if (!on) return;
+      if (i <= txt.length) {
+        el.innerHTML = txt.slice(0,i).replace(/\n/g,'<br>') +
+          (i < txt.length ? '<span style="opacity:0.5">_</span>' : '');
+        if (beepFn && i > 0 && txt[i-1] !== '\n' && txt[i-1] !== ' ') beepFn();
+        i++; setTimeout(go, spd);
+      } else {
+        el.innerHTML = txt.replace(/\n/g,'<br>');
+      }
+    }
+    go();
+  }
+
+  // ── FLY-THROUGH ───────────────────────────────────────
+  function _flyGroup() {
+    var el = document.getElementById('i-group');
+    if (!el) return;
+    _whoosh();
+    var st = null, DUR = 3000;
+    function anim(ts) {
+      if (!on) { el.style.opacity = '0'; return; }
+      if (!st) st = ts;
+      var t = Math.min((ts - st) / DUR, 1);
+      var scale = t < 0.68
+        ? Math.pow(t / 0.68, 2.4) * 1.05
+        : 1.05 + Math.pow((t - 0.68) / 0.32, 2) * 20;
+      var alpha = t < 0.12 ? t/0.12 : (t < 0.68 ? 1 : Math.max(0, 1-(t-0.68)/0.32));
+      el.style.transform = 'translate(-50%,-50%) scale('+Math.max(0.01,scale)+')';
+      el.style.opacity = alpha;
+      if (t < 1) requestAnimationFrame(anim);
+      else { el.style.display = 'none'; }
+    }
+    setTimeout(function() { if (on) _brass(164.8, 0.24); }, Math.floor(DUR * 0.64));
+    requestAnimationFrame(anim);
+  }
+
+  // ── SEQUENCE PRINCIPALE ───────────────────────────────
+  function _run() {
+    _mkStars();
+    _loop();
+    _mkAudio();
+    _t(function() { if (AC) _playTheme(); }, 300);
+
+    var TL = document.getElementById('i-tagline');
+    var TT = document.getElementById('i-title');
+    var SL = document.getElementById('i-scanline');
+    var SB = document.getElementById('i-sub');
+    var BY = document.getElementById('i-by');
+    var PR = document.getElementById('i-pre');
+    var FN = document.getElementById('i-final');
+
+    _t(function() { _flyGroup(); }, 1000);
+
+    _t(function() {
+      var t0 = performance.now(), s0 = hspd;
+      function decel() {
+        if (!on) return;
+        var el2 = performance.now() - t0;
+        hspd = Math.max(0.5, s0 * Math.pow(0.9976, el2));
+        if (hspd > 0.52) requestAnimationFrame(decel); else hspd = 0.5;
+      }
+      decel();
+    }, 2800);
+
+    _t(function() { _alienBoot(); }, 4500);
+
+    _t(function() {
+      TL.style.opacity = '1';
+      TL.style.color = '#4e8f4e';
+      _type(TL, '> KYRONEX NEURAL NET v7.4.1\n> AUTHENTICATION......[ OK ]\n> BOOT SEQUENCE COMPLETE', 25, _beep);
+    }, 5000);
+
+    _t(function() { TL.style.opacity = '0'; }, 8000);
+
+    _t(function() {
+      TL.style.color = '#c0c0c0';
+      TL.innerHTML = '';
+      TL.style.opacity = '1';
+      _type(TL, 'En l\'an 2026, la frontiere entre la machine\net la conscience humaine\na definitivement disparu...', 42, null);
+    }, 8500);
+
+    _t(function() { TL.style.opacity = '0'; }, 14000);
+    _t(function() { _brass(164.8, 0.20); TT.classList.add('show'); }, 14500);
+
+    _t(function() {
+      if (!SL) return;
+      SL.style.animation = 'none';
+      SL.style.webkitAnimation = 'none';
+      SL.style.top = '-5%';
+      SL.style.opacity = '0';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          SL.style.animation = 'scan-v 1.2s ease-in-out forwards';
+          SL.style.webkitAnimation = 'scan-v 1.2s ease-in-out forwards';
+        });
+      });
+    }, 15200);
+
+    _t(function() { _brass(196.0, 0.11); SB.style.opacity = '1'; }, 15700);
+    _t(function() { _brass(164.8, 0.09); BY.style.opacity = '1'; }, 16200);
+    _t(function() { _brass(130.8, 0.08); PR.style.opacity = '1'; }, 16700);
+
+    _t(function() {
+      _brass(130.8, 0.30);
+      FN.classList.add('glitch');
+      FN.style.opacity = '1';
+    }, 17200);
+
+    _t(function() { if (TT) TT.classList.add('glow'); }, 17600);
+    _t(function() { _end(); }, 18000);
+  }
+
+  document.addEventListener('DOMContentLoaded', _run);
+})();
+</script>
+</body>
+</html>
