@@ -2087,7 +2087,7 @@ body.enhanced .message {
 #intro-stars-cv { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 #intro-group {
   position: absolute; top: 50%; left: 50%;
-  font-family: 'Courier New', monospace; font-size: 2.8em; font-weight: bold;
+  font-family: 'Courier New', monospace; font-size: clamp(2em, 7vw, 5em); font-weight: bold;
   color: #fff; letter-spacing: 0.15em; text-align: center; opacity: 0;
   white-space: nowrap; pointer-events: none;
   text-shadow: 0 0 30px rgba(255,100,100,0.8), 0 0 60px rgba(200,50,50,0.4);
@@ -2907,7 +2907,7 @@ async function toggleMic() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, autoGainControl: false, noiseSuppression: false } });
 
     micContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = micContext.createMediaStreamSource(micStream);
@@ -3132,7 +3132,7 @@ async function toggleWakeListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, autoGainControl: false, noiseSuppression: false } });
 
     wakeContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = wakeContext.createMediaStreamSource(wakeStream);
@@ -3217,7 +3217,7 @@ async function toggleAutoListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
+    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, autoGainControl: false, noiseSuppression: false } });
 
     autoContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = autoContext.createMediaStreamSource(autoStream);
@@ -3554,14 +3554,19 @@ function unlockUI(name, lang) {
   _focusInput();
   _loadChatHistory();
   _applyUILang(_preferredLang);
-  // Salutation KITT avec vraie voix (TTS) — streamChat sans message user visible
+  // Salutation KITT — déclenchée APRÈS la fin de l'intro pour éviter qu'elle se perde
   const _greetTriggers = {
     fr: 'Bonjour', en: 'Hello', de: 'Hallo',
     it: 'Ciao',   pt: 'Ola',   es: 'Hola', nl: 'Hallo'
   };
-  setTimeout(function () {
-    streamChat(_greetTriggers[_preferredLang] || 'Bonjour');
-  }, 900);
+  const _greetWord = _greetTriggers[_preferredLang] || 'Bonjour';
+  if (window._introEnded) {
+    // Intro déjà terminée (skip rapide)
+    setTimeout(function() { streamChat(_greetWord); }, 600);
+  } else {
+    // Intro encore en cours — déclencher après sa fin
+    window._greetAfterIntro = function() { setTimeout(function() { streamChat(_greetWord); }, 600); };
+  }
 }
 
 async function initUserIdentity() {
@@ -5698,6 +5703,9 @@ document.addEventListener('DOMContentLoaded', () => _brain.init());
         ov.remove(); // Suppression physique définitive
       }
       if (AC) { try { AC.close(); } catch(e){} AC = null; }
+      // Déclencher le bonjour en attente (si unlockUI a déjà été appelé pendant l'intro)
+      window._introEnded = true;
+      if (window._greetAfterIntro) { window._greetAfterIntro(); window._greetAfterIntro = null; }
     }, 3200);
   }
 
