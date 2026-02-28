@@ -12,7 +12,72 @@
 <meta name="author" content="ByManix (Emmanuel Gelinne)">
 <meta name="license" content="Elastic License 2.0">
 <style>
-/* V35.0 - CINEMATIC CRT OVERLAY */ 
+/* ===== DESIGN SYSTEM KYRONEX — Noir & Rouge ===== */
+:root {
+  /* Palette stricte Noir & Rouge */
+  --c-red-hot:    #ff2222;
+  --c-red-main:   #cc0000;
+  --c-red-dim:    #660000;
+  --c-red-ghost:  #220000;
+  --c-red-glow:   rgba(204,0,0,0.35);
+
+  --c-bg-deep:    #000000;
+  --c-bg-panel:   #060000;
+  --c-bg-input:   #080000;
+  --c-bg-hover:   #0d0000;
+
+  --c-text-main:  #ff4444;
+  --c-text-dim:   #882222;
+  --c-text-muted: #441111;
+  --c-border:     #330000;
+
+  --font-mono: 'Courier New', 'Lucida Console', monospace;
+  --font-size-base: 13px;
+
+  --t-fast: 0.15s ease;
+  --t-med:  0.3s ease;
+
+  /* Hiérarchie Z-index propre */
+  --z-bg:       0;
+  --z-content:  10;
+  --z-scanner:  20;
+  --z-header:   100;
+  --z-input:    100;
+  --z-panels:   300;
+  --z-overlays: 500;
+  --z-modal:    1000;
+  --z-intro:    9999;
+}
+
+/* ── Pattern ctrl-btn unifié : états actif/inactif propres ── */
+.ctrl-btn {
+  background: transparent;
+  border: 1px solid var(--c-red-ghost);
+  color: var(--c-red-dim);
+  font-family: var(--font-mono);
+  font-size: 0.48em;
+  font-weight: bold;
+  letter-spacing: 1.5px;
+  padding: 3px 7px;
+  cursor: pointer;
+  border-radius: 2px;
+  position: relative;
+  transition: all var(--t-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.ctrl-btn:hover {
+  border-color: var(--c-red-dim);
+  color: var(--c-red-main);
+  box-shadow: 0 0 8px var(--c-red-glow);
+}
+.ctrl-btn.active {
+  background: var(--c-red-ghost);
+  border-color: var(--c-red-main);
+  color: var(--c-red-hot);
+  box-shadow: 0 0 12px var(--c-red-glow), inset 0 0 6px var(--c-red-ghost);
+}
+
+/* V35.0 - CINEMATIC CRT OVERLAY */
 body::after { 
     content: " ; 
  display: block; 
@@ -47,12 +112,12 @@ html { height: 100%; overflow: hidden; }
 body {
   background: radial-gradient(ellipse at 50% 30%, #0f0000 0%, #050000 40%, #020000 100%);
   color: #e0e0e0;
-  font-family: 'Courier New', monospace;
+  font-family: var(--font-mono);
   position: fixed;
   top: 0; left: 0; right: 0;
   height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto auto;
   overflow: hidden;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
@@ -82,17 +147,17 @@ body::after {
   pointer-events: none;
   z-index: 0;
 }
-body > * { position: relative; z-index: 1; }
+body > * { position: relative; z-index: var(--z-content); }
 
 /* Header */
 .header {
   text-align: center;
   padding: 12px 15px 10px;
-  border-bottom: 1px solid #1e0000;
+  border-bottom: 1px solid var(--c-border);
   background: linear-gradient(180deg, #0f0000 0%, transparent 100%);
   position: relative;
-  flex-shrink: 0;
-  z-index: 5;
+  z-index: var(--z-header);
+  grid-row: 1;
 }
 .header::after {
   content: '';
@@ -146,18 +211,8 @@ body > * { position: relative; z-index: 1; }
   text-transform: uppercase;
 }
 .footer-credit {
-  text-align: center;
-  padding: 5px;
-  font-size: 0.52em;
-  color: #664444;
-  letter-spacing: 1px;
-  border-top: 1px solid #110000;
-  background: linear-gradient(0deg, #0a0000 0%, transparent 100%);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
+  display: none; /* intégré dans le status-bar du nouveau layout grid */
 }
-.footer-credit:active { color: #664444; }
 
 /* About overlay */
 .about-overlay {
@@ -279,7 +334,12 @@ body > * { position: relative; z-index: 1; }
 
 /* Scanner */
 .scanner-container {
-  display: none;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border);
+  z-index: var(--z-scanner);
+  grid-row: 2;
 }
 .scanner {
   width: min(300px, 80vw);
@@ -302,8 +362,8 @@ body > * { position: relative; z-index: 1; }
 
 /* Chat area */
 .chat-area {
-  flex: 1;
   overflow-y: auto;
+  grid-row: 4;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -468,13 +528,15 @@ body > * { position: relative; z-index: 1; }
 /* Input area */
 .input-area {
   padding: 10px 14px max(12px, env(safe-area-inset-bottom));
-  border-top: 1px solid #1e0000;
+  border-top: 1px solid var(--c-border);
   background: linear-gradient(0deg, #0a0000 0%, transparent 100%);
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   position: relative;
-  flex-shrink: 0;
+  z-index: var(--z-input);
+  grid-row: 5;
 }
 .input-area::before {
   content: '';
@@ -733,8 +795,9 @@ body.kb-open { padding-bottom: 222px; }
   50% { box-shadow: 0 0 25px #0088cc88; }
 }
 
-/* Wake button */
-.wake-btn {
+/* Wake button — masqué dans la nouvelle UI (fonctionnement interne préservé) */
+.wake-btn { display: none !important; }
+.wake-btn-hidden {
   background: radial-gradient(circle at 35% 35%, #1a0a2a, #0d0011);
   color: #bb77ff;
   border: 1px solid #440077;
@@ -850,7 +913,17 @@ body.kb-open { padding-bottom: 222px; }
 
 /* Status */
 .status-bar {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 14px;
+  font-size: 0.55em;
+  color: var(--c-text-muted);
+  letter-spacing: 1px;
+  border-top: 1px solid var(--c-ghost, #110000);
+  background: #030000;
+  z-index: var(--z-input);
+  grid-row: 6;
 }
 .status-bar .online { color: #448844; text-shadow: 0 0 6px #00440022; }
 .status-bar .offline { color: #884444; }
@@ -863,7 +936,7 @@ body.kb-open { padding-bottom: 222px; }
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 2 !important;
+  z-index: var(--z-bg);
   pointer-events: none;
 }
 
@@ -872,7 +945,7 @@ body.kb-open { padding-bottom: 222px; }
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;   /* inset: 0 invisible sur iOS Safari */
   display: flex; align-items: center; justify-content: center;
-  z-index: 0 !important;
+  z-index: var(--z-bg);
   pointer-events: none; overflow: hidden;
   -webkit-transform: translate3d(0, 0, 0); /* force GPU rendering iOS */
   transform: translate3d(0, 0, 0);
@@ -947,7 +1020,7 @@ body.kb-open { padding-bottom: 222px; }
   position: fixed;
   top: 50%; left: 50%;
   width: 0; height: 0;
-  z-index: 0 !important;
+  z-index: var(--z-bg);
   pointer-events: none;
   -webkit-perspective: 700px;
   perspective: 700px;
@@ -1164,19 +1237,50 @@ body.kb-open { padding-bottom: 222px; }
 @media (max-width: 600px) { .mother-panel { display: none; } }
 
 /* ── Badge stats mobile (sous scanner) ── */
-.mobile-stats { display: none; text-align: center; font-size: 0.5em; color: #444; letter-spacing: 1.5px; padding: 2px 10px; }
+.mobile-stats { display: none; text-align: center; font-size: 0.5em; color: #444; letter-spacing: 1.5px; padding: 2px 10px; grid-row: 3; }
 @media (max-width: 600px) { .mobile-stats { display: block; } }
 
-/* ── Bouton Reset (dans header, gauche) ── */
-/* ── Conteneur boutons header centré ── */
-.header-btns {
-  position: absolute;
-  left: 50%; top: calc(50% + 52px);
-  transform: translate(-50%, -50%);
+/* ── Sélecteur de langues dans le header ── */
+.header-lang-selector {
   display: flex;
-  gap: 10px;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.header-lang-selector .lang-opt {
+  background: transparent;
+  border: 1px solid var(--c-red-ghost);
+  color: var(--c-red-dim);
+  font-size: 0.5em;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  border-radius: 2px;
+}
+.header-lang-selector .lang-opt:hover {
+  border-color: var(--c-red-dim);
+  color: var(--c-red-main);
+}
+.header-lang-selector .lang-opt.selected {
+  background: var(--c-red-ghost);
+  border-color: var(--c-red-main);
+  color: var(--c-red-hot);
+  box-shadow: 0 0 8px var(--c-red-glow);
+}
+@media (max-width: 480px) { .header-lang-selector { display: none; } }
+
+/* ── Conteneur boutons header ── */
+.header-btns {
+  display: flex;
+  gap: 6px;
   align-items: center;
-  z-index: 10;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  z-index: var(--z-header);
 }
 .reset-btn {
   position: relative; transform: none;
@@ -2046,68 +2150,21 @@ body.enhanced .message {
 }
 @keyframes poweron-flash { 0% { opacity:1; } 100% { opacity:0; } }
 
-</style>
-<style>/* GEMINI KITT OVERRIDE */ :root { --red-neon: #ff0000; --red-glow: rgba(255, 0, 0, 0.6); } body { background: #000 !important; } .header h1 { color: var(--red-neon) !important; text-shadow: 0 0 20px var(--red-glow) !important; } .scanner { border-color: var(--red-neon) !important; box-shadow: 0 0 20px var(--red-glow) !important; } button { border: 1px solid var(--red-neon) !important; background: rgba(20,0,0,0.8) !important; color: var(--red-neon) !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 2px !important; } button:hover { background: var(--red-neon) !important; color: #000 !important; box-shadow: 0 0 30px var(--red-neon) !important; }</style>
-/* V35.0 - CINEMATIC CRT OVERLAY */ 
-body::after { 
-    content: " ; 
- display: block; 
- position: fixed; 
- top: 0; 
- left: 0; 
- bottom: 0; 
- right: 0; 
- background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
- linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); 
- z-index: 9999; 
- background-size: 100% 4px, 3px 100%; 
- pointer-events: none; 
- opacity: 0.2; 
-} 
-/* V35.0 - MOTHER PANEL ALIEN STYLE */ 
-.mother-panel { 
- font-family: Courier New, Courier, monospace !important; 
- border: 1px solid rgba(255, 0, 0, 0.3) !important; 
- box-shadow: 0 0 15px rgba(255, 0, 0, 0.1) inset; 
- background: rgba(0, 0, 0, 0.85) !important; 
-} 
-.mother-panel .mp-mem-item { 
- border-left: 3px solid #ff0000; 
- margin-bottom: 5px; 
- padding-left: 8px; 
- color: #ff4444 !important; 
- text-shadow: 0 0 5px rgba(255, 0, 0, 0.5); 
-}
-<style>
-/* FORCAGE INTERACTIVITE MAESTRO V36.2 */
-.chat-area, .input-area {
-  position: relative !important;
-  z-index: 8000 !important;
-  pointer-events: auto !important;
-}
-input#input {
-  pointer-events: auto !important;
-  cursor: text !important;
-  z-index: 8001 !important;
-}
-button {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-  z-index: 8001 !important;
-}
-#intro-overlay {
-  z-index: 10000 !important;
-}
-#intro-overlay.done {
-  display: none !important;
-  pointer-events: none !important;
-}
-#brain-canvas, #orb, #jarvis-bg {
-  pointer-events: none !important;
-}
-/* Forcer visibilité Voicebox & Scanner en haut */
-.voicebox-container { display: flex !important; justify-content: center; margin-bottom: 5px; }
-.scanner-container { display: flex !important; justify-content: center; padding: 10px 0; border-bottom: 1px solid #330000; }
+
+/* CSS propre — remplace les hacks Maestro/Gemini */
+.chat-area   { pointer-events: auto; }
+.input-area  { pointer-events: auto; }
+input#input  { pointer-events: auto; cursor: text; }
+button       { pointer-events: auto; cursor: pointer; }
+
+#intro-overlay       { z-index: var(--z-intro); }
+#intro-overlay.done  { display: none; pointer-events: none; }
+
+#brain-canvas, #orb, #jarvis-bg { pointer-events: none; }
+
+/* Voicebox dans le header */
+.voicebox-container { display: flex; justify-content: center; margin-bottom: 5px; }
+
 </style>
 </head>
 <body>
@@ -2217,18 +2274,27 @@ button {
     <canvas id="voicebox" width="280" height="44"></canvas>
   </div>
   <div class="mother-line">MU-TH-UR 6000 &nbsp;·&nbsp; NEURAL INTERFACE ACTIVE</div>
+  <div class="header-lang-selector" id="headerLangSelector">
+    <button class="lang-opt" data-lang="fr" onclick="selectLang('fr')">FR</button>
+    <button class="lang-opt" data-lang="en" onclick="selectLang('en')">EN</button>
+    <button class="lang-opt" data-lang="de" onclick="selectLang('de')">DE</button>
+    <button class="lang-opt" data-lang="it" onclick="selectLang('it')">IT</button>
+    <button class="lang-opt" data-lang="es" onclick="selectLang('es')">ES</button>
+    <button class="lang-opt" data-lang="nl" onclick="selectLang('nl')">NL</button>
+    <button class="lang-opt" data-lang="pt" onclick="selectLang('pt')">PT</button>
+  </div>
   <div class="header-btns">
-    <button class="reset-btn" id="resetbtn" onclick="resetChat()" title="Vider l'historique KITT">RST</button>
-    <button class="vig-btn" id="vigbtn" onclick="_requireNightAuth(toggleVigilance)" title="Mode Vigilance — surveillance caméra">VIG</button>
-    <button class="ambient-btn" id="ambientbtn" onclick="_requireNightAuth(toggleAmbient)" title="Sons d'ambiance système">AMB</button>
-    <button class="night-btn" id="nightbtn" onclick="toggleNightPanel()" title="Night Scheduler — améliorations autonomes">NIGHT</button>
-    <button class="vis-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
-    <button class="rpt-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
-    <button class="enhance-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
-    <button class="conv-btn" id="convbtn" onclick="openConvAdmin()" aria-label="Archives conversations" title="Archives des conversations KITT">CONV</button>
-    <button class="dl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
-    <button class="git-btn" id="gitbtn" onclick="_requireNightAuth(gitPushHtml)" title="Pousser index.html vers GitHub">GIT</button>
-    <button class="run-btn" id="runbtn" onclick="_requireNightAuth(runImprove)" title="Lancer une amélioration autonome maintenant">RUN</button>
+    <button class="reset-btn ctrl-btn" id="resetbtn" onclick="resetChat()" title="Vider l'historique KITT">RST</button>
+    <button class="vig-btn ctrl-btn" id="vigbtn" onclick="_requireNightAuth(toggleVigilance)" title="Mode Vigilance — surveillance caméra">VIG</button>
+    <button class="ambient-btn ctrl-btn" id="ambientbtn" onclick="_requireNightAuth(toggleAmbient)" title="Sons d'ambiance système">AMB</button>
+    <button class="night-btn ctrl-btn" id="nightbtn" onclick="toggleNightPanel()" title="Night Scheduler — améliorations autonomes">NIGHT</button>
+    <button class="vis-btn ctrl-btn" id="visbtn" onclick="toggleVisPanel()" title="Visiteurs — historique des connexions">VIS</button>
+    <button class="rpt-btn ctrl-btn" id="rptbtn" onclick="_requireNightAuth(toggleRptPanel)" title="Rapport Mode Automatique — historique des améliorations autonomes">RPT</button>
+    <button class="enhance-btn ctrl-btn" id="enhancebtn" onclick="_requireNightAuth(toggleEnhance)" title="Lance une optimisation graphique et vocale complète du site actif sans supprimer le contenu existant.">AUTO</button>
+    <button class="conv-btn ctrl-btn" id="convbtn" onclick="openConvAdmin()" aria-label="Archives conversations" title="Archives des conversations KITT">CONV</button>
+    <button class="dl-btn ctrl-btn" id="dlbtn" onclick="_requireNightAuth(downloadHtml)" title="Télécharger le index.html actuel">DL</button>
+    <button class="git-btn ctrl-btn" id="gitbtn" onclick="_requireNightAuth(gitPushHtml)" title="Pousser index.html vers GitHub">GIT</button>
+    <button class="run-btn ctrl-btn" id="runbtn" onclick="_requireNightAuth(runImprove)" title="Lancer une amélioration autonome maintenant">RUN</button>
   </div>
 </div>
 
@@ -2265,6 +2331,7 @@ button {
 
 <div class="status-bar">
   <span id="status">Connexion...</span><span id="lang-badge"></span>
+  <span style="margin-left:auto;opacity:0.5;cursor:pointer" onclick="document.getElementById('about').classList.add('visible')" title="A propos">&copy; 2026 ByManix</span>
 </div>
 
 <script>
