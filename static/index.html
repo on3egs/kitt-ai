@@ -2700,7 +2700,8 @@ async function _playAndRevealNext() {
     src.buffer = decoded;
     const vbAnalyser = ensureVoiceboxAnalyser();
     const gainNode = ctx.createGain();
-    gainNode.gain.value = 1.0; // Volume 100%
+    // Compenser le ducking PulseAudio quand le micro AUTO est actif (~-50%)
+    gainNode.gain.value = autoListenActive ? 2.2 : 1.0;
     src.connect(gainNode);
     gainNode.connect(vbAnalyser);
     src.onended = () => _playAndRevealNext();
@@ -2907,7 +2908,7 @@ async function toggleMic() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, autoGainControl: false, noiseSuppression: false } });
+    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
 
     micContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = micContext.createMediaStreamSource(micStream);
@@ -3132,7 +3133,7 @@ async function toggleWakeListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, autoGainControl: false, noiseSuppression: false } });
+    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
 
     wakeContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = wakeContext.createMediaStreamSource(wakeStream);
@@ -3217,7 +3218,7 @@ async function toggleAutoListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, autoGainControl: false, noiseSuppression: false } });
+    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true } });
 
     autoContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = autoContext.createMediaStreamSource(autoStream);
