@@ -765,7 +765,8 @@ body.kb-open { padding-bottom: 222px; }
 }
 
 /* Camera button */
-.cam-btn {
+.cam-btn { display: none !important; } /* bouton retiré — vision Jetson non accessible depuis mobile */
+.cam-btn-hidden {
   background: radial-gradient(circle at 35% 35%, #2a1010, #110000);
   color: #ff5555;
   border: 1px solid #660000;
@@ -866,7 +867,8 @@ body.kb-open { padding-bottom: 222px; }
 /* Scanner listening/wake/auto modes — vitesse et couleur gérées par JS rAF */
 
 /* Audio activation button */
-.audio-btn {
+.audio-btn { display: none !important; } /* bouton retiré — activation audio déclenchée automatiquement */
+.audio-btn-hidden {
   background: radial-gradient(circle at 35% 35%, #2a1010, #110000);
   color: #ff5555;
   border: 1px solid #660000;
@@ -2318,13 +2320,9 @@ button       { pointer-events: auto; cursor: pointer; }
   </button>
   <button class="auto-btn" id="automic" onclick="toggleAutoListen()" title="Auto-ecoute continue">AUTO</button>
   <button class="wake-btn" id="wakemic" onclick="toggleWakeListen()" title="Wake word: dites KITT">WAKE</button>
-  <button class="cam-btn" id="cam" onclick="sendVision()" title="Vision camera">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
-  </button>
-  <button class="audio-btn" id="audiobtn" onclick="activateAudio()" title="Activer le son">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-    <svg class="slash" width="20" height="20" viewBox="0 0 24 24" style="position:absolute"><line x1="4" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-  </button>
+  <!-- cam et audio masqués — JS préservé, boutons invisibles -->
+  <button class="cam-btn" id="cam" onclick="sendVision()" aria-hidden="true"></button>
+  <button class="audio-btn" id="audiobtn" onclick="activateAudio()" aria-hidden="true"></button>
   <input type="text" id="input" placeholder="Parlez à KITT..." autofocus>
   <button id="send" onclick="sendMessage()">ENVOYER</button>
 </div>
@@ -3281,15 +3279,16 @@ function activateAudio() {
   audioBtn.classList.add('active');
 }
 
-// Auto-detect audio state on interactions
+// Auto-activation audio sur première interaction (remplace le bouton AUDIO supprimé)
 function checkAudioState() {
-  if (playbackCtx && playbackCtx.state === 'running' && !audioActivated) {
-    audioActivated = true;
-    audioBtn.classList.add('active');
+  if (!audioActivated) {
+    activateAudio();
+  } else if (playbackCtx && playbackCtx.state === 'suspended') {
+    playbackCtx.resume();
   }
 }
 ['click', 'touchstart', 'keydown'].forEach(evt =>
-  document.addEventListener(evt, checkAudioState, { passive: true })
+  document.addEventListener(evt, checkAudioState, { once: true, passive: true })
 );
 
 // ── Sons MU-TH-UR 6000 / ALIEN — traitement données (graves + métalliques) ──
