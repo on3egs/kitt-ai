@@ -1746,8 +1746,10 @@ async def handle_stt(request: web.Request) -> web.Response:
             language=user_lang,
             beam_size=5,
             vad_filter=True,
+            vad_parameters={"threshold": 0.3, "min_silence_duration_ms": 300},
             temperature=0,
             condition_on_previous_text=False,
+            no_speech_threshold=0.3,
         )
         text = " ".join(seg.text.strip() for seg in segments).strip()
         stt_ms = (time.time() - t0) * 1000
@@ -1760,8 +1762,10 @@ async def handle_stt(request: web.Request) -> web.Response:
                 language="fr",
                 beam_size=5,
                 vad_filter=True,
+                vad_parameters={"threshold": 0.3, "min_silence_duration_ms": 300},
                 temperature=0,
                 condition_on_previous_text=False,
+                no_speech_threshold=0.3,
             )
             text2 = " ".join(seg.text.strip() for seg in segs2).strip()
             if text2:

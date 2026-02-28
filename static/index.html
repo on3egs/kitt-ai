@@ -2412,9 +2412,11 @@ let autoContext = null;
 let autoProcessor = null;
 let autoAnalyser = null;
 let autoPcmChunks = [];
+let autoPreBuffer = [];
+const PRE_BUFFER_CHUNKS = 6;
 let isSpeaking = false;
 let silenceStart = 0;
-const VAD_THRESHOLD = 0.015;
+const VAD_THRESHOLD = 0.008;
 const SILENCE_DURATION = 1000;
 const MIN_SPEECH_DURATION = 600;
 let speechStart = 0;
@@ -2873,6 +2875,15 @@ async function sendToSTT(chunks, sampleRate) {
   let offset = 0;
   for (const chunk of chunks) { allSamples.set(chunk, offset); offset += chunk.length; }
 
+  // Normalisation : amplifie le signal si le micro est trop faible (max 6x gain)
+  let rmsSum = 0;
+  for (let i = 0; i < allSamples.length; i++) rmsSum += allSamples[i] * allSamples[i];
+  const rms = Math.sqrt(rmsSum / allSamples.length);
+  if (rms > 0.001) {
+    const gain = Math.min(0.25 / rms, 6.0);
+    for (let i = 0; i < allSamples.length; i++) allSamples[i] = Math.max(-1, Math.min(1, allSamples[i] * gain));
+  }
+
   const wavBlob = encodeWAV(allSamples, sampleRate);
   statusEl.innerHTML = '<span class="online">Transcription... (' + (wavBlob.size/1024).toFixed(0) + ' Ko)</span>';
 
@@ -2942,7 +2953,7 @@ async function toggleMic() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
+    micStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
 
     micContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = micContext.createMediaStreamSource(micStream);
@@ -3033,6 +3044,7 @@ let wakeContext = null;
 let wakeProcessor = null;
 let wakeAnalyser = null;
 let wakePcmChunks = [];
+let wakePreBuffer = [];
 let wakeIsSpeaking = false;
 let wakeSilenceStart = 0;
 let wakeSpeechStart = 0;
@@ -3167,7 +3179,7 @@ async function toggleWakeListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
+    wakeStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
 
     wakeContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = wakeContext.createMediaStreamSource(wakeStream);
@@ -3178,24 +3190,24 @@ async function toggleWakeListen() {
 
     wakeProcessor = wakeContext.createScriptProcessor(4096, 1, 1);
     wakePcmChunks = [];
+    wakePreBuffer = [];
     wakeIsSpeaking = false;
     wakeSilenceStart = 0;
     wakeSpeechStart = 0;
 
     wakeProcessor.onaudioprocess = (e) => {
       if (!wakeListenActive || (wakeProcessing && !wakeAwaitingCommand)) return;
-      const buf = new Float32Array(wakeAnalyser.fftSize);
-      wakeAnalyser.getFloatTimeDomainData(buf);
+      const wakeChunk = new Float32Array(e.inputBuffer.getChannelData(0));
       let sum = 0;
-      for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
-      const rms = Math.sqrt(sum / buf.length);
+      for (let i = 0; i < wakeChunk.length; i++) sum += wakeChunk[i] * wakeChunk[i];
+      const rms = Math.sqrt(sum / wakeChunk.length);
       const now = Date.now();
-
       if (rms > VAD_THRESHOLD) {
         if (!wakeIsSpeaking) {
           wakeIsSpeaking = true;
           wakeSpeechStart = now;
-          wakePcmChunks = [];
+          wakePcmChunks = [...wakePreBuffer];
+          wakePreBuffer = [];
           wakeBtn.classList.remove('waiting', 'wake-triggered');
           wakeBtn.classList.add('hearing');
           scanner.classList.remove('wake-listening', 'wake-triggered');
@@ -3207,9 +3219,9 @@ async function toggleWakeListen() {
           }
         }
         wakeSilenceStart = 0;
-        wakePcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+        wakePcmChunks.push(wakeChunk);
       } else if (wakeIsSpeaking) {
-        wakePcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+        wakePcmChunks.push(wakeChunk);
         if (!wakeSilenceStart) wakeSilenceStart = now;
         if (now - wakeSilenceStart > SILENCE_DURATION) {
           wakeIsSpeaking = false;
@@ -3230,6 +3242,9 @@ async function toggleWakeListen() {
             }
           }
         }
+      } else {
+        wakePreBuffer.push(wakeChunk);
+        if (wakePreBuffer.length > PRE_BUFFER_CHUNKS) wakePreBuffer.shift();
       }
     };
 
@@ -3252,7 +3267,7 @@ async function toggleAutoListen() {
 
   try {
     statusEl.innerHTML = '<span class="online">Demande micro...</span>';
-    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
+    autoStream = await getUserMediaCompat({ audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
 
     autoContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
     const source = autoContext.createMediaStreamSource(autoStream);
@@ -3263,24 +3278,24 @@ async function toggleAutoListen() {
 
     autoProcessor = autoContext.createScriptProcessor(4096, 1, 1);
     autoPcmChunks = [];
+    autoPreBuffer = [];
     isSpeaking = false;
     silenceStart = 0;
     speechStart = 0;
 
     autoProcessor.onaudioprocess = (e) => {
       if (!autoListenActive || autoProcessing) return;
-      const buf = new Float32Array(autoAnalyser.fftSize);
-      autoAnalyser.getFloatTimeDomainData(buf);
+      const chunk = new Float32Array(e.inputBuffer.getChannelData(0));
       let sum = 0;
-      for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
-      const rms = Math.sqrt(sum / buf.length);
+      for (let i = 0; i < chunk.length; i++) sum += chunk[i] * chunk[i];
+      const rms = Math.sqrt(sum / chunk.length);
       const now = Date.now();
-
       if (rms > VAD_THRESHOLD) {
         if (!isSpeaking) {
           isSpeaking = true;
           speechStart = now;
-          autoPcmChunks = [];
+          autoPcmChunks = [...autoPreBuffer];
+          autoPreBuffer = [];
           autoBtn.classList.remove('waiting');
           autoBtn.classList.add('hearing');
           scanner.classList.remove('auto-listening');
@@ -3288,9 +3303,9 @@ async function toggleAutoListen() {
           statusEl.innerHTML = `<span class="online">${_t('stt_detected')}</span>`;
         }
         silenceStart = 0;
-        autoPcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+        autoPcmChunks.push(chunk);
       } else if (isSpeaking) {
-        autoPcmChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+        autoPcmChunks.push(chunk);
         if (!silenceStart) silenceStart = now;
         if (now - silenceStart > SILENCE_DURATION) {
           isSpeaking = false;
@@ -3305,6 +3320,9 @@ async function toggleAutoListen() {
             statusEl.innerHTML = '<span class="online">Auto-ecoute: en attente...</span>';
           }
         }
+      } else {
+        autoPreBuffer.push(chunk);
+        if (autoPreBuffer.length > PRE_BUFFER_CHUNKS) autoPreBuffer.shift();
       }
     };
 
