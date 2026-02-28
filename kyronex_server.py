@@ -744,7 +744,11 @@ Contexte IoT : tableau de bord ZA Elettronica (société italienne, fournisseur 
 RÈGLE ABSOLUE : Ne développe JAMAIS plus que ces faits sur ZA Elettronica ou Mario Ravasi. Si on te demande plus de détails, dis honnêtement que tu n'as pas plus d'informations sur eux.
 Si tag [VISION: ...]: décris ce que tes capteurs visuels détectent, en restant KITT.
 Si tag [CONNAISSANCE LOCALE: ...]: ces informations sont extraites de tes propres manuels et notes techniques. Utilise-les en priorité absolue pour répondre aux questions sur ton fonctionnement ou le projet.
-Si tag [INFO WEB: ...]: ces informations viennent d'une recherche internet en temps réel — utilise-les pour répondre avec précision, sans rien inventer au-delà."""
+Si tag [INFO WEB: ...]: ces informations viennent d'une recherche internet en temps réel — utilise-les pour répondre avec précision, sans rien inventer au-delà.
+
+Exemple de style :
+[MANIX] KITT, tu es prêt ?
+[KITT] Toujours. Mes systèmes sont à 100%. Qu'est-ce que tu veux faire ?"""
 
 # ── Personnalités par utilisateur ────────────────────────────────────────
 _USER_PERSONALITIES = {
@@ -1055,11 +1059,11 @@ async def query_llm(user_message: str, history: list, user_name: str = "", user_
 
     payload = {
         "messages": messages,
-        "temperature": 0.8,
-        "max_tokens": 192,
-        "top_p": 0.9,
-        "top_k": 40,
-        "min_p": 0.1,
+        "temperature": 0.7,
+        "max_tokens": 256,
+        "top_p": 0.8,
+        "top_k": 20,
+        "min_p": 0.05,
         "repeat_penalty": 1.1,
         "repeat_last_n": 64,
         "stream": False,
@@ -1472,10 +1476,12 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
         session = await get_llm_session()
         async with session.post(
             f"{LLAMA_SERVER}/v1/chat/completions",
-            json={"messages": messages, "temperature": 0.8, "max_tokens": 192,
-                  "top_p": 0.9, "top_k": 40, "min_p": 0.1,
+            json={"messages": messages, "temperature": 0.7, "max_tokens": 256,
+                  "top_p": 0.8, "top_k": 20, "min_p": 0.05,
                   "repeat_penalty": 1.1, "repeat_last_n": 64, "stream": True},
         ) as llm_resp:
+            _raw_buf = ""       # Buffer brut accumulatif (pour filtrer <think> multi-tokens)
+            _clean_emitted = "" # Texte nettoyé déjà émis au client
             async for line in llm_resp.content:
                 text = line.decode("utf-8").strip()
                 if text.startswith("data: ") and text != "data: [DONE]":
@@ -1484,8 +1490,21 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
                         delta = chunk["choices"][0].get("delta", {}).get("content", "")
                         if delta:
                             full_reply += delta
-                            sentence_buf += delta
-                            await resp.write(f"data: {json.dumps({'token': delta})}\n\n".encode())
+                            _raw_buf += delta
+                            # Filtrage <think> : blocs complets
+                            clean_buf = re.sub(r'<think>.*?</think>', '', _raw_buf, flags=re.DOTALL)
+                            # Filtrage tokens spéciaux Qwen
+                            clean_buf = re.sub(r'<\|[^|]+\|>', '', clean_buf)
+                            # Filtrage bloc <think> en cours (incomplet, sans </think>)
+                            if '<think>' in clean_buf:
+                                clean_buf = re.sub(r'<think>.*$', '', clean_buf, flags=re.DOTALL)
+                            # Émettre seulement le nouveau contenu nettoyé
+                            new_content = clean_buf[len(_clean_emitted):]
+                            if not new_content:
+                                continue
+                            _clean_emitted = clean_buf
+                            sentence_buf += new_content
+                            await resp.write(f"data: {json.dumps({'token': new_content})}\n\n".encode())
                             # Lancer TTS dès qu'une phrase est complète ET envoyer l'audio dès qu'il est prêt
                             match = re.search(r'[.!?…]\s', sentence_buf)
                             if match or sentence_buf.endswith('\n'):
@@ -1528,8 +1547,14 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
         tts_items.append(tts_task)
         asyncio.create_task(send_audio_when_ready(tts_task, rest))
 
+    # Nettoyer full_reply avant historique (supprimer blocs <think> résiduels)
+    full_reply_clean = re.sub(r'<think>.*?</think>', '', full_reply, flags=re.DOTALL)
+    full_reply_clean = re.sub(r'<\|[^|]+\|>', '', full_reply_clean).strip()
+    if not full_reply_clean:
+        full_reply_clean = full_reply.strip()
+
     conversations[session_id].append({"role": "user", "content": user_msg})
-    conversations[session_id].append({"role": "assistant", "content": full_reply})
+    conversations[session_id].append({"role": "assistant", "content": full_reply_clean})
 
     # Mémoire persistante — extraire les faits du message utilisateur
     if _MEMORY_FORGET.search(user_msg):
@@ -1770,10 +1795,12 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
         session = await get_llm_session()
         async with session.post(
             f"{LLAMA_SERVER}/v1/chat/completions",
-            json={"messages": messages, "temperature": 0.8, "max_tokens": 192,
-                  "top_p": 0.9, "top_k": 40, "min_p": 0.1,
+            json={"messages": messages, "temperature": 0.7, "max_tokens": 256,
+                  "top_p": 0.8, "top_k": 20, "min_p": 0.05,
                   "repeat_penalty": 1.1, "repeat_last_n": 64, "stream": True},
         ) as llm_resp:
+            _raw_buf_v = ""
+            _clean_emitted_v = ""
             async for line in llm_resp.content:
                 text = line.decode("utf-8").strip()
                 if text.startswith("data: ") and text != "data: [DONE]":
@@ -1782,8 +1809,17 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
                         delta = chunk["choices"][0].get("delta", {}).get("content", "")
                         if delta:
                             full_reply += delta
-                            sentence_buf += delta
-                            await resp.write(f"data: {json.dumps({'token': delta})}\n\n".encode())
+                            _raw_buf_v += delta
+                            clean_buf_v = re.sub(r'<think>.*?</think>', '', _raw_buf_v, flags=re.DOTALL)
+                            clean_buf_v = re.sub(r'<\|[^|]+\|>', '', clean_buf_v)
+                            if '<think>' in clean_buf_v:
+                                clean_buf_v = re.sub(r'<think>.*$', '', clean_buf_v, flags=re.DOTALL)
+                            new_content_v = clean_buf_v[len(_clean_emitted_v):]
+                            if not new_content_v:
+                                continue
+                            _clean_emitted_v = clean_buf_v
+                            sentence_buf += new_content_v
+                            await resp.write(f"data: {json.dumps({'token': new_content_v})}\n\n".encode())
                             if re.search(r'[.!?…]\s', sentence_buf) or sentence_buf.endswith('\n'):
                                 chunk_text = sentence_buf.strip()
                                 sentence_buf = ""
