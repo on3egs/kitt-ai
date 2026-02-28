@@ -199,7 +199,10 @@ class PiperGPU:
 
     def _synthesize_raw(self, text: str, length_scale: float | None = None) -> np.ndarray:
         """Internal method: synthesize text without preprocessing."""
-        if not text.strip():
+        # Supprimer les chunks vides ou purement ponctuation (évite que espeak lise "f" pour ".")
+        import re as _re
+        text = _re.sub(r'^[^a-zA-ZÀ-ÿ0-9]+$', '', text).strip()
+        if not text:
             return np.array([], dtype=np.float32)
 
         phonemes = self.phonemize(text)

@@ -1497,7 +1497,7 @@ async def handle_chat_stream(request: web.Request) -> web.StreamResponse:
                                 else:
                                     chunk_text = sentence_buf.strip()
                                     sentence_buf = ""
-                                if chunk_text:
+                                if chunk_text and any(c.isalpha() for c in chunk_text):
                                     # Détecter la langue depuis la réponse LLM dès la 1ère phrase
                                     if not tts_lang_locked and len(full_reply) >= 15:
                                         detected = _detect_lang(full_reply)
@@ -1772,7 +1772,7 @@ async def handle_vision(request: web.Request) -> web.StreamResponse:
                             if re.search(r'[.!?…]\s', sentence_buf) or sentence_buf.endswith('\n'):
                                 chunk_text = sentence_buf.strip()
                                 sentence_buf = ""
-                                if chunk_text:
+                                if chunk_text and any(c.isalpha() for c in chunk_text):
                                     chunk_emotion = detect_emotion(full_reply)
                                     tts_items.append((chunk_text, asyncio.create_task(_synth_chunk(chunk_text, chunk_emotion))))
                     except (json.JSONDecodeError, KeyError):
