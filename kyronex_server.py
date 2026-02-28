@@ -1061,9 +1061,9 @@ async def search_local_knowledge(query: str, max_chars: int = 1500) -> str:
             if len(result) + len(para) > max_chars:
                 break
             result += para + "\n"
-        return f"[Module: {best_fn}]\n{result.strip()}"
+        return result.strip()
     else:
-        return f"[Module: {best_fn}]\n{best_content[:max_chars]}"
+        return best_content[:max_chars]
 
 async def web_search(query: str, max_results: int = 3) -> str:
     """Recherche DuckDuckGo async uniquement si nécessaire.
