@@ -59,6 +59,10 @@ Serveur : `kyronex_server.py` — HTTPS port 3000 — aiohttp + Whisper + Piper 
 - **KITT proactif** : WebSocket `/api/proactive/ws`, salutations 6/7/12/18/22/0h ✅
 - **Wake word** : regex `/\bki+t+\b/i`, VAD + Whisper ✅
 - **Cookie auth**, JSONL logs, WebSocket monitor, Identity API ✅
+- **Filtrage `<think>` Qwen** (V37.12) : buffer accumulatif `_raw_buf`/`_clean_emitted` dans les boucles SSE (chat + vision), nettoyage `full_reply` avant historique ✅
+- **Paramètres LLM optimaux** (V37.12) : temp=0.7, top_p=0.8, top_k=20, min_p=0.05, max_tokens=256 (valeurs Alibaba/ICLR recommandées) ✅
+- **Filtrage JS côté client** (V37.12) : regex `<think>` + tokens spéciaux dans `streamChat()` ✅
+- **Exemple style `_BASE_PROMPT`** (V37.12) : dialogue calibré Qwen 3B en fin de prompt ✅
 
 ---
 
@@ -260,4 +264,4 @@ LD_LIBRARY_PATH=/home/kitt/CTranslate2/install/lib \
 
 ## JOURNAL DES SESSIONS
 
-Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260228_035802, itération 1/1 en cours, fichier 224K/6334 lignes
+Voir : /home/kitt/kitt-ai/static/versions/ — Session 20260228, V37.12 — Filtrage <think> Qwen + paramètres LLM optimaux
